@@ -1,0 +1,167 @@
+services:
+  # -----------------------------------------------------
+  # 1. Primary MySQL (Yazma & Şema)
+  # -----------------------------------------------------
+  mysql-primary:
+    image: mysql:8.0
+    container_name: yemekhane-mysql-primary
+    restart: always
+    command:
+      - --server-id=1
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+03:00
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: yemekhane_db
+      MYSQL_USER: yemekhane_user
+      MYSQL_PASSWORD: yemekhane_pass
+    volumes:
+      - ./db/conf/primary.cnf:/etc/mysql/conf.d/primary.cnf:ro
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - mysql_primary_data:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -prootpass --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+    networks:
+      - app-net
+
+  # -----------------------------------------------------
+  # 2. Replica MySQL (Okuma & Salt Okunur)
+  # -----------------------------------------------------
+  mysql-replica:
+    image: mysql:8.0
+    container_name: yemekhane-mysql-replica
+    restart: always
+    command:
+      - --server-id=2
+      - --log-bin=mysql-bin
+      - --binlog-format=ROW
+      - --gtid-mode=ON
+      - --enforce-gtid-consistency=ON
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+03:00
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+    volumes:
+      - ./db/conf/replica.cnf:/etc/mysql/conf.d/replica.cnf:ro
+      - mysql_replica_data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -prootpass --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+    networks:
+      - app-net
+
+  # -----------------------------------------------------
+  # 3. Replica Setup (Replikasyonu Başlatan Geçici Servis)
+  # -----------------------------------------------------
+  replica-setup:
+    image: mysql:8.0
+    container_name: yemekhane-replica-setup
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      mysql-replica:
+        condition: service_healthy
+    volumes:
+      - ./db/replica-setup.sh:/replica-setup.sh:ro
+    entrypoint: ["bash", "/replica-setup.sh"]
+    networks:
+      - app-net
+    restart: "no"
+
+  # -----------------------------------------------------
+  # 4. Redis (Menü Önbelleği & Oturum Deposu)
+  # -----------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: yemekhane-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app-net
+
+  # -----------------------------------------------------
+  # 5. Frontend (Apache 2.4 - HTML/CSS & Ters Proxy)
+  # -----------------------------------------------------
+  frontend:
+    image: httpd:2.4-alpine
+    container_name: yemekhane-frontend
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/local/apache2/htdocs:ro
+      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - app-net
+
+  # -----------------------------------------------------
+  # 6. Uygulama (FastAPI Backend - Aşama 2'de aktifleşecek)
+  # -----------------------------------------------------
+  # uygulama:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: yemekhane-uygulama
+  #   restart: always
+  #   depends_on:
+  #     mysql-primary:
+  #       condition: service_healthy
+  #     mysql-replica:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   environment:
+  #     - DB_PRIMARY_HOST=mysql-primary
+  #     - DB_PRIMARY_PORT=3306
+  #     - DB_REPLICA_HOST=mysql-replica
+  #     - DB_REPLICA_PORT=3306
+  #     - DB_USER=yemekhane_user
+  #     - DB_PASSWORD=yemekhane_pass
+  #     - DB_NAME=yemekhane_db
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #   networks:
+  #     - app-net
+
+volumes:
+  mysql_primary_data:
+  mysql_replica_data:
+  redis_data:
+
+networks:
+  app-net:
+    driver: bridge
