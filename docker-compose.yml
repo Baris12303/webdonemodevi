@@ -129,33 +129,33 @@ services:
       - app-net
 
   # -----------------------------------------------------
-  # 6. Uygulama (FastAPI Backend - Aşama 2'de aktifleşecek)
+  # 6. Uygulama (FastAPI Backend - Katmanlı Mimari)
   # -----------------------------------------------------
-  # uygulama:
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   container_name: yemekhane-uygulama
-  #   restart: always
-  #   depends_on:
-  #     mysql-primary:
-  #       condition: service_healthy
-  #     mysql-replica:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   environment:
-  #     - DB_PRIMARY_HOST=mysql-primary
-  #     - DB_PRIMARY_PORT=3306
-  #     - DB_REPLICA_HOST=mysql-replica
-  #     - DB_REPLICA_PORT=3306
-  #     - DB_USER=yemekhane_user
-  #     - DB_PASSWORD=yemekhane_pass
-  #     - DB_NAME=yemekhane_db
-  #     - REDIS_HOST=redis
-  #     - REDIS_PORT=6379
-  #   networks:
-  #     - app-net
+  uygulama:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: yemekhane-uygulama
+    restart: always
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      mysql-replica:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_PRIMARY_HOST=mysql-primary
+      - DB_PRIMARY_PORT=3306
+      - DB_REPLICA_HOST=mysql-replica
+      - DB_REPLICA_PORT=3306
+      - DB_USER=root
+      - DB_PASSWORD=rootpass
+      - DB_NAME=yemekhane_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - app-net
 
 volumes:
   mysql_primary_data:

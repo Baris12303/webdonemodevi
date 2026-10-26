@@ -1,30 +1,21 @@
 -- =====================================================
--- Yemekhane Otomasyonu - Başlangıç Verileri
+-- Yemekhane Otomasyonu - BaÅlangÄ±Ã§ Verileri
 -- 02_ornek_veri.sql
--- 30 Kullanıcı, 52 Yemek, 84 Menü, ~365 Rezervasyon
--- Tarihler kurulum anına göre dinamik üretilir
 -- =====================================================
 
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
 USE yemekhane_db;
 
--- -----------------------------------------------------
--- Yemekhaneler (2 Adet: Merkez 400, Mühendislik 60)
--- -----------------------------------------------------
 INSERT INTO yemekhaneler (id, ad, kapasite, konum) VALUES
   (1, 'Merkez Yemekhanesi', 400, 'Ana Kampüs Meydanı'),
   (2, 'Mühendislik Yemekhanesi', 60, 'Mühendislik Fakültesi Zemin Kat');
 
--- -----------------------------------------------------
--- Öğünler (Kahvaltı 07:00, Öğle 10:00, Akşam 15:00)
--- -----------------------------------------------------
 INSERT INTO ogunler (id, ad, son_saat) VALUES
   (1, 'Kahvaltı', '07:00:00'),
   (2, 'Öğle', '10:00:00'),
   (3, 'Akşam', '15:00:00');
 
--- -----------------------------------------------------
--- Yemek Kategorileri (7 Kategori)
--- -----------------------------------------------------
 INSERT INTO yemek_kategorileri (id, ad, sira) VALUES
   (1, 'Çorbalar', 1),
   (2, 'Ana Yemekler', 2),
@@ -34,9 +25,6 @@ INSERT INTO yemek_kategorileri (id, ad, sira) VALUES
   (6, 'Tatlılar & Meyveler', 6),
   (7, 'İçecekler', 7);
 
--- -----------------------------------------------------
--- Yemekler (52 Yemek)
--- -----------------------------------------------------
 INSERT INTO yemekler (id, kategori_id, ad, kalori, vejetaryen_mi) VALUES
   (1, 1, 'Mercimek Çorbası', 180, TRUE),
   (2, 1, 'Ezogelin Çorbası', 190, TRUE),
@@ -91,9 +79,6 @@ INSERT INTO yemekler (id, kategori_id, ad, kalori, vejetaryen_mi) VALUES
   (51, 7, 'Vişne Suyu', 110, TRUE),
   (52, 7, 'Su', 0, TRUE);
 
--- -----------------------------------------------------
--- Alerjenler (14 Alerjen)
--- -----------------------------------------------------
 INSERT INTO alerjenler (id, ad) VALUES
   (1, 'Gluten'),
   (2, 'Laktoz'),
@@ -110,9 +95,6 @@ INSERT INTO alerjenler (id, ad) VALUES
   (13, 'Acı Bakla'),
   (14, 'Yumuşakçalar');
 
--- -----------------------------------------------------
--- Yemek Alerjenleri
--- -----------------------------------------------------
 INSERT INTO yemek_alerjenleri (yemek_id, alerjen_id) VALUES
   (1, 1),
   (2, 1),
@@ -167,10 +149,6 @@ INSERT INTO yemek_alerjenleri (yemek_id, alerjen_id) VALUES
   (48, 2),
   (49, 2);
 
--- -----------------------------------------------------
--- Menüler (84 Menü: 14 gün x 2 yemekhane x 3 öğün)
--- Tarihler CURDATE() bazlıdır
--- -----------------------------------------------------
 INSERT INTO menuler (id, yemekhane_id, tarih, ogun_id, ogrenci_fiyati, personel_fiyati) VALUES
   (1, 1, DATE_ADD(CURDATE(), INTERVAL -7 DAY), 1, 30.00, 60.00),
   (2, 1, DATE_ADD(CURDATE(), INTERVAL -7 DAY), 2, 45.00, 90.00),
@@ -257,9 +235,6 @@ INSERT INTO menuler (id, yemekhane_id, tarih, ogun_id, ogrenci_fiyati, personel_
   (83, 2, DATE_ADD(CURDATE(), INTERVAL 6 DAY), 2, 45.00, 90.00),
   (84, 2, DATE_ADD(CURDATE(), INTERVAL 6 DAY), 3, 45.00, 90.00);
 
--- -----------------------------------------------------
--- Menü Yemekleri (Her Menüye 4 Çeşit)
--- -----------------------------------------------------
 INSERT INTO menu_yemekleri (menu_id, yemek_id) VALUES
   (1, 4), (1, 14), (1, 36), (1, 45),
   (2, 7), (2, 19), (2, 35), (2, 47),
@@ -346,9 +321,6 @@ INSERT INTO menu_yemekleri (menu_id, yemek_id) VALUES
   (83, 2), (83, 16), (83, 34), (83, 47),
   (84, 5), (84, 9), (84, 33), (84, 43);
 
--- -----------------------------------------------------
--- Kullanıcılar (30 Kullanıcı: 1 Yönetici, 4 Personel, 25 Öğrenci)
--- -----------------------------------------------------
 INSERT INTO kullanicilar (id, ogrenci_no, ad, soyad, eposta, sifre_hash, rol, bakiye) VALUES
   (1, NULL, 'Barış', 'Yılmaz', 'admin@kampus.edu.tr', '$2b$12$uqCGNPjR2FRH.wLf29QTG.P8vyJJ/x.D91sbGiQ1Af.D6cx0jXk5O', 'yonetici', 150.00),
   (2, NULL, 'Ahmet', 'Kaya', 'personel1@kampus.edu.tr', '$2b$12$uqCGNPjR2FRH.wLf29QTG.P8vyJJ/x.D91sbGiQ1Af.D6cx0jXk5O', 'personel', 150.00),
@@ -381,9 +353,6 @@ INSERT INTO kullanicilar (id, ogrenci_no, ad, soyad, eposta, sifre_hash, rol, ba
   (29, '251229029', 'Büşra', 'Taş', 'ogrenci24@kampus.edu.tr', '$2b$12$uqCGNPjR2FRH.wLf29QTG.P8vyJJ/x.D91sbGiQ1Af.D6cx0jXk5O', 'ogrenci', 85.00),
   (30, '251229030', 'Deniz', 'Bulut', 'ogrenci25@kampus.edu.tr', '$2b$12$uqCGNPjR2FRH.wLf29QTG.P8vyJJ/x.D91sbGiQ1Af.D6cx0jXk5O', 'ogrenci', 140.00);
 
--- -----------------------------------------------------
--- Rezervasyonlar (365 Adet)
--- -----------------------------------------------------
 INSERT INTO rezervasyonlar (id, kullanici_id, menu_id, ucret, durum, olusturulma_tarihi, iptal_tarihi, kullanilma_tarihi) VALUES
   (1, 11, 36, 45.00, 'kullanildi', DATE_ADD(CURDATE(), INTERVAL -3 DAY), NULL, DATE_ADD(CURDATE(), INTERVAL -2 DAY)),
   (2, 25, 44, 45.00, 'kullanildi', DATE_ADD(CURDATE(), INTERVAL -1 DAY), NULL, DATE_ADD(CURDATE(), INTERVAL 0 DAY)),
@@ -751,10 +720,6 @@ INSERT INTO rezervasyonlar (id, kullanici_id, menu_id, ucret, durum, olusturulma
   (364, 12, 76, 30.00, 'aktif', DATE_ADD(CURDATE(), INTERVAL 4 DAY), NULL, NULL),
   (365, 14, 33, 45.00, 'kullanildi', DATE_ADD(CURDATE(), INTERVAL -3 DAY), NULL, DATE_ADD(CURDATE(), INTERVAL -2 DAY));
 
--- -----------------------------------------------------
--- Bakiye Hareketleri (455 Adet)
--- Bakiye her zaman hareketlerin toplamına eşittir!
--- -----------------------------------------------------
 INSERT INTO bakiye_hareketleri (id, kullanici_id, miktar, hareket_tipi, aciklama, rezervasyon_id, tarih) VALUES
   (1, 1, 350.00, 'yukleme', '350.00 TL bakiye yüklendi.', NULL, DATE_SUB(NOW(), INTERVAL 10 DAY)),
   (2, 2, 350.00, 'yukleme', '350.00 TL bakiye yüklendi.', NULL, DATE_SUB(NOW(), INTERVAL 10 DAY)),
@@ -1212,9 +1177,6 @@ INSERT INTO bakiye_hareketleri (id, kullanici_id, miktar, hareket_tipi, aciklama
   (454, 27, 135.00, 'yukleme', '135.00 TL bakiye yüklendi.', NULL, DATE_SUB(NOW(), INTERVAL 5 DAY)),
   (455, 28, 115.00, 'yukleme', '115.00 TL bakiye yüklendi.', NULL, DATE_SUB(NOW(), INTERVAL 5 DAY));
 
--- -----------------------------------------------------
--- Değerlendirmeler (Kullanılmış menülere ait değerlendirmeler)
--- -----------------------------------------------------
 INSERT INTO degerlendirmeler (id, kullanici_id, menu_id, puan, yorum, tarih) VALUES
   (1, 11, 36, 2, 'Tavuk biraz kuruydu, geliştirilebilir.', DATE_ADD(CURDATE(), INTERVAL -2 DAY)),
   (2, 13, 13, 2, 'Tavuk biraz kuruydu, geliştirilebilir.', DATE_ADD(CURDATE(), INTERVAL -5 DAY)),

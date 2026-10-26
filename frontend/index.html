@@ -1,46 +1,254 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kampüs Yemekhane Otomasyonu</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0;
-            padding: 40px 20px;
-            background: #f8fafc;
-            color: #1e293b;
-            text-align: center;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        h1 { color: #0284c7; }
-        .badge {
-            display: inline-block;
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 6px 12px;
-            border-radius: 9999px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kampüs Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container">
-        <span class="badge">Aşama 1: Altyapı Hazır</span>
-        <h1>Kampüs Yemekhane Otomasyonu</h1>
-        <p>Apache 2.4 web sunucusu başarıyla yayında.</p>
-        <p>Backend API entegrasyonu Aşama 2'de aktif hale getirilecektir.</p>
+
+  <!-- Toast Bildirim Alanı -->
+  <div id="toast-container"></div>
+
+  <!-- Üst Başlık (Header) -->
+  <header>
+    <div class="header-container">
+      <div class="logo-area">
+        <span style="font-size: 1.5rem;">🍽️</span>
+        <div>
+          <h1>Kampüs Yemekhane</h1>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Otomasyon Sistemi</span>
+        </div>
+      </div>
+
+      <!-- Giriş Yapan Kullanıcı Bilgisi -->
+      <div id="header-user-info" class="user-badge" style="display: none;">
+        <span id="user-balance" class="balance-pill">0.00 TL</span>
+        <span id="user-name" style="font-weight: 600; font-size: 0.9rem;"></span>
+        <span id="user-role" class="role-badge"></span>
+        <button class="btn btn-danger btn-sm" onclick="logout()">Çıkış</button>
+      </div>
     </div>
+  </header>
+
+  <!-- Navigasyon Sekmeleri -->
+  <nav id="main-nav" style="display: none;">
+    <div class="nav-container">
+      <button class="nav-tab active" data-screen="screen-today" onclick="showScreen('screen-today')">Günün Menüsü</button>
+      <button class="nav-tab" data-screen="screen-weekly" onclick="showScreen('screen-weekly')">Haftalık Menü</button>
+      <button class="nav-tab" data-screen="screen-reservations" onclick="showScreen('screen-reservations')">Rezervasyonlarım</button>
+      <button class="nav-tab" data-screen="screen-balance" onclick="showScreen('screen-balance')">Bakiye</button>
+      <button class="nav-tab" id="tab-admin" data-screen="screen-admin" style="display: none;" onclick="showScreen('screen-admin')">⚙️ Yönetici Paneli</button>
+    </div>
+  </nav>
+
+  <!-- Ana İçerik -->
+  <main>
+
+    <!-- 1. EKRAN: GİRİŞ YAP (LOGIN) -->
+    <section id="screen-login" class="screen active">
+      <div class="card" style="max-width: 420px; margin: 40px auto;">
+        <div class="card-title">Giriş Yap</div>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+          Kampüs e-posta adresiniz ve şifrenizle giriş yapın.
+        </p>
+
+        <form onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label for="login-email">E-posta Adresi</label>
+            <input type="email" id="login-email" required placeholder="ornek@kampus.edu.tr">
+          </div>
+          <div class="form-group">
+            <label for="login-password">Şifre</label>
+            <input type="password" id="login-password" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Giriş Yap</button>
+        </form>
+
+        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border);">
+          <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 8px;">
+            Hızlı Test Girişi (Şifre: password123):
+          </span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('admin@kampus.edu.tr')">Yönetici</button>
+            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('personel1@kampus.edu.tr')">Personel</button>
+            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('ogrenci1@kampus.edu.tr')">Öğrenci 1</button>
+            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('ogrenci6@kampus.edu.tr')">Öğrenci 6</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. EKRAN: GÜNÜN MENÜSÜ -->
+    <section id="screen-today" class="screen">
+      <div class="card" style="margin-bottom: 15px; padding: 15px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+          <div>
+            <label>Yemekhane</label>
+            <select id="today-yh-select" onchange="loadDailyMenu()">
+              <option value="1">Merkez Yemekhanesi (400 Kişi)</option>
+              <option value="2">Mühendislik Yemekhanesi (60 Kişi)</option>
+            </select>
+          </div>
+          <div>
+            <label>Öğün</label>
+            <select id="today-ogun-select" onchange="loadDailyMenu()">
+              <option value="1">Kahvaltı (Son: 07:00)</option>
+              <option value="2" selected>Öğle (Son: 10:00)</option>
+              <option value="3">Akşam (Son: 15:00)</option>
+            </select>
+          </div>
+          <div>
+            <label>Tarih</label>
+            <input type="date" id="today-date-picker" onchange="loadDailyMenu()">
+          </div>
+        </div>
+      </div>
+
+      <div id="daily-menu-content">
+        <!-- Dinamik Menü Kartı Gelecek -->
+      </div>
+    </section>
+
+    <!-- 3. EKRAN: HAFTALIK MENÜ VE REZERVASYON -->
+    <section id="screen-weekly" class="screen">
+      <div class="card" style="margin-bottom: 15px; padding: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <label>Yemekhane Seçimi</label>
+            <select id="weekly-yh-select" onchange="loadWeeklyMenus()" style="min-width: 220px;">
+              <option value="1">Merkez Yemekhanesi</option>
+              <option value="2">Mühendislik Yemekhanesi</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="loadWeeklyMenus()">Yenile</button>
+        </div>
+      </div>
+
+      <div id="weekly-menu-list">
+        <!-- Dinamik Haftalık Menü Kartları Gelecek -->
+      </div>
+    </section>
+
+    <!-- 4. EKRAN: REZERVASYONLARIM -->
+    <section id="screen-reservations" class="screen">
+      <div class="card-title">Rezervasyonlarım</div>
+      <div id="reservations-list">
+        <!-- Rezervasyon Kartları Gelecek -->
+      </div>
+    </section>
+
+    <!-- 5. EKRAN: BAKİYE YÖNETİMİ & HAREKET GEÇMİŞİ -->
+    <section id="screen-balance" class="screen">
+      <div class="card" style="text-align: center; padding: 30px 20px;">
+        <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">GÜNCEL BAKİYENİZ</span>
+        <div id="balance-current-display" style="font-size: 2.5rem; font-weight: 800; color: var(--success); margin: 10px 0;">
+          0.00 TL
+        </div>
+
+        <div style="margin-top: 20px;">
+          <label style="margin-bottom: 10px;">Hızlı Bakiye Yükle (Stored Procedure):</label>
+          <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <button class="btn btn-primary btn-sm" onclick="handleTopUp(50)">+50 TL</button>
+            <button class="btn btn-primary btn-sm" onclick="handleTopUp(100)">+100 TL</button>
+            <button class="btn btn-primary btn-sm" onclick="handleTopUp(200)">+200 TL</button>
+            <button class="btn btn-primary btn-sm" onclick="handleTopUp(500)">+500 TL</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Bakiye Hareket Geçmişi</div>
+        <div id="balance-history-list">
+          <!-- Hareket Listesi Gelecek -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. EKRAN: DEĞERLENDİRME -->
+    <section id="screen-review" class="screen">
+      <div class="card" style="max-width: 500px; margin: 0 auto 20px auto;">
+        <div class="card-title">Menüyü Değerlendir</div>
+        <form onsubmit="handleSendReview(event)">
+          <input type="hidden" id="review-menu-id">
+          <div class="form-group">
+            <label>Puanınız (1 - 5 Yıldız)</label>
+            <select id="review-rating">
+              <option value="5">⭐⭐⭐⭐⭐ 5 - Mükemmel</option>
+              <option value="4">⭐⭐⭐⭐ 4 - Çok İyi</option>
+              <option value="3">⭐⭐⭐ 3 - Orta</option>
+              <option value="2">⭐⭐ 2 - Geliştirilmeli</option>
+              <option value="1">⭐ 1 - Kötü</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Yorumunuz (İsteğe bağlı)</label>
+            <textarea id="review-comment" rows="3" placeholder="Yemekler nasıldı, lezzet ve porsiyon nasıldı?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Değerlendirmeyi Gönder</button>
+          <button type="button" class="btn btn-sm" style="background: transparent; color: var(--text-muted); margin-top: 8px;" onclick="showScreen('screen-reservations')">İptal / Geri Dön</button>
+        </form>
+      </div>
+
+      <div class="card" style="max-width: 500px; margin: 0 auto;">
+        <div class="card-title">Bu Menüye Yapılan Diğer Yorumlar</div>
+        <div id="menu-reviews-list"></div>
+      </div>
+    </section>
+
+    <!-- 7. EKRAN: YÖNETİCİ PANELİ -->
+    <section id="screen-admin" class="screen">
+      <div class="card">
+        <div class="card-title">Yeni Menü Oluştur (Cache Invalidation Tetikler)</div>
+        <form onsubmit="handleCreateMenu(event)">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            <div class="form-group">
+              <label>Yemekhane</label>
+              <select id="admin-yh-select">
+                <option value="1">Merkez Yemekhanesi</option>
+                <option value="2">Mühendislik Yemekhanesi</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Tarih</label>
+              <input type="date" id="admin-menu-date" required>
+            </div>
+            <div class="form-group">
+              <label>Öğün</label>
+              <select id="admin-ogun-select">
+                <option value="1">Kahvaltı</option>
+                <option value="2">Öğle</option>
+                <option value="3">Akşam</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Öğrenci Fiyatı (TL)</label>
+              <input type="number" id="admin-price-student" step="0.5" value="45.0" required>
+            </div>
+            <div class="form-group">
+              <label>Personel Fiyatı (TL)</label>
+              <input type="number" id="admin-price-staff" step="0.5" value="90.0" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Menü Yemekleri (Ctrl veya Shift ile çoklu seçin)</label>
+            <select id="admin-dishes-select" multiple size="7" style="height: 160px;"></select>
+          </div>
+
+          <button type="submit" class="btn btn-primary">Menüyü Kaydet ve Yayınla</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Menü Bazında Doluluk ve Puan İstatistikleri (View Raporu)</div>
+        <div id="admin-stats-table"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="js/app.js"></script>
 </body>
 </html>
-

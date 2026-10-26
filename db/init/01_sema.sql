@@ -1,8 +1,11 @@
 -- =====================================================
--- Yemekhane Otomasyonu - Veritabanı Şeması
+-- Yemekhane Otomasyonu - VeritabanÄ± ÅemasÄ±
 -- 01_sema.sql
 -- 12 Tablo, 3 View, 4 Stored Procedure
 -- =====================================================
+
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
 
 CREATE DATABASE IF NOT EXISTS yemekhane_db
   CHARACTER SET utf8mb4
@@ -167,7 +170,6 @@ CREATE TABLE IF NOT EXISTS degerlendirmeler (
 -- HAZIR VIEW'LAR (3 ADET)
 -- =====================================================
 
--- View 1: v_menu_detay
 CREATE OR REPLACE VIEW v_menu_detay AS
 SELECT 
     m.id AS menu_id,
@@ -193,7 +195,6 @@ LEFT JOIN yemek_alerjenleri ya ON y.id = ya.yemek_id
 LEFT JOIN alerjenler a ON ya.alerjen_id = a.id
 GROUP BY m.id, m.yemekhane_id, yh.ad, yh.kapasite, m.tarih, m.ogun_id, og.ad, og.son_saat, m.ogrenci_fiyati, m.personel_fiyati;
 
--- View 2: v_menu_doluluk
 CREATE OR REPLACE VIEW v_menu_doluluk AS
 SELECT 
     m.id AS menu_id,
@@ -212,7 +213,6 @@ JOIN ogunler og ON m.ogun_id = og.id
 LEFT JOIN rezervasyonlar r ON m.id = r.menu_id
 GROUP BY m.id, m.yemekhane_id, yh.ad, m.tarih, m.ogun_id, og.ad, yh.kapasite;
 
--- View 3: v_menu_puan
 CREATE OR REPLACE VIEW v_menu_puan AS
 SELECT 
     m.id AS menu_id,
@@ -235,9 +235,6 @@ GROUP BY m.id, m.yemekhane_id, yh.ad, m.tarih, m.ogun_id, og.ad;
 
 DELIMITER $$
 
--- -----------------------------------------------------
--- 1. Stored Procedure: sp_rezervasyon_yap
--- -----------------------------------------------------
 DROP PROCEDURE IF EXISTS sp_rezervasyon_yap$$
 CREATE PROCEDURE sp_rezervasyon_yap(
     IN p_kullanici_id INT,
@@ -256,7 +253,6 @@ proc_label: BEGIN
     DECLARE v_var_olan_durum ENUM('aktif', 'kullanildi', 'iptal');
     DECLARE v_rezervasyon_id INT;
 
-    -- Kullanıcı kontrolü
     SELECT rol, bakiye INTO v_rol, v_bakiye
     FROM kullanicilar WHERE id = p_kullanici_id;
 
@@ -265,7 +261,6 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Kullanıcı bulunamadı.';
     END IF;
 
-    -- Menü kontrolü
     SELECT m.tarih, og.son_saat, m.ogrenci_fiyati, m.personel_fiyati, yh.kapasite
     INTO v_tarih, v_son_saat, v_ogrenci_fiyati, v_personel_fiyati, v_kapasite
     FROM menuler m
@@ -278,13 +273,11 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Menü bulunamadı.';
     END IF;
 
-    -- Rezervasyon son saati kontrolü
     IF NOW() > TIMESTAMP(v_tarih, v_son_saat) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Rezervasyon süresi dolmuştur.';
     END IF;
 
-    -- Kullanıcının zaten aktif rezervasyonu var mı?
     SELECT durum, id INTO v_var_olan_durum, v_rezervasyon_id
     FROM rezervasyonlar
     WHERE kullanici_id = p_kullanici_id AND menu_id = p_menu_id;
@@ -294,7 +287,6 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Bu menüye zaten rezervasyonunuz bulunmaktadır.';
     END IF;
 
-    -- Kapasite kontrolü
     SELECT COUNT(*) INTO v_aktif_rezervasyon
     FROM rezervasyonlar
     WHERE menu_id = p_menu_id AND durum = 'aktif';
@@ -304,28 +296,23 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Yemekhane kapasitesi dolmuştur.';
     END IF;
 
-    -- Fiyat belirleme
     IF v_rol = 'ogrenci' THEN
         SET v_ucret = v_ogrenci_fiyati;
     ELSE
         SET v_ucret = v_personel_fiyati;
     END IF;
 
-    -- Bakiye kontrolü
     IF v_bakiye < v_ucret THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Bakiye yetersiz.';
     END IF;
 
-    -- İşlem Adımları (Transaction)
     START TRANSACTION;
 
-    -- Bakiyeden düş
     UPDATE kullanicilar
     SET bakiye = bakiye - v_ucret
     WHERE id = p_kullanici_id;
 
-    -- Rezervasyon kaydını ekle veya güncelle
     IF v_rezervasyon_id IS NOT NULL THEN
         UPDATE rezervasyonlar
         SET durum = 'aktif',
@@ -339,16 +326,12 @@ proc_label: BEGIN
         SET v_rezervasyon_id = LAST_INSERT_ID();
     END IF;
 
-    -- Bakiye hareketi ekle
     INSERT INTO bakiye_hareketleri (kullanici_id, miktar, hareket_tipi, aciklama, rezervasyon_id, tarih)
     VALUES (p_kullanici_id, -v_ucret, 'rezervasyon', CONCAT('Rezervasyon ücreti: Menü #', p_menu_id), v_rezervasyon_id, NOW());
 
     COMMIT;
 END proc_label$$
 
--- -----------------------------------------------------
--- 2. Stored Procedure: sp_rezervasyon_iptal
--- -----------------------------------------------------
 DROP PROCEDURE IF EXISTS sp_rezervasyon_iptal$$
 CREATE PROCEDURE sp_rezervasyon_iptal(
     IN p_kullanici_id INT,
@@ -360,7 +343,6 @@ proc_label: BEGIN
     DECLARE v_tarih DATE;
     DECLARE v_son_saat TIME;
 
-    -- Rezervasyon kontrolü
     SELECT r.ucret, r.durum, m.tarih, og.son_saat
     INTO v_ucret, v_durum, v_tarih, v_son_saat
     FROM rezervasyonlar r
@@ -373,13 +355,11 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'İptal edilebilir aktif rezervasyon bulunamadı.';
     END IF;
 
-    -- İptal son saati kontrolü
     IF NOW() > TIMESTAMP(v_tarih, v_son_saat) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Rezervasyon iptal süresi geçmiştir.';
     END IF;
 
-    -- İşlem Adımları (Transaction)
     START TRANSACTION;
 
     UPDATE rezervasyonlar
@@ -397,9 +377,6 @@ proc_label: BEGIN
     COMMIT;
 END proc_label$$
 
--- -----------------------------------------------------
--- 3. Stored Procedure: sp_bakiye_yukle
--- -----------------------------------------------------
 DROP PROCEDURE IF EXISTS sp_bakiye_yukle$$
 CREATE PROCEDURE sp_bakiye_yukle(
     IN p_kullanici_id INT,
@@ -431,9 +408,6 @@ proc_label: BEGIN
     COMMIT;
 END proc_label$$
 
--- -----------------------------------------------------
--- 4. Stored Procedure: sp_turnike_gecis
--- -----------------------------------------------------
 DROP PROCEDURE IF EXISTS sp_turnike_gecis$$
 CREATE PROCEDURE sp_turnike_gecis(
     IN p_kullanici_id INT,
@@ -442,7 +416,6 @@ CREATE PROCEDURE sp_turnike_gecis(
 proc_label: BEGIN
     DECLARE v_rezervasyon_id INT;
 
-    -- Kullanıcının bugüne ait ilgili yemekhanede aktif rezervasyonunu bul
     SELECT r.id INTO v_rezervasyon_id
     FROM rezervasyonlar r
     JOIN menuler m ON r.menu_id = m.id
@@ -469,4 +442,3 @@ proc_label: BEGIN
 END proc_label$$
 
 DELIMITER ;
-

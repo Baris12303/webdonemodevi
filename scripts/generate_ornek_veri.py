@@ -14,7 +14,7 @@ sql_lines.append("-- 02_ornek_veri.sql")
 sql_lines.append("-- 30 Kullanıcı, 52 Yemek, 84 Menü, ~365 Rezervasyon")
 sql_lines.append("-- Tarihler kurulum anına göre dinamik üretilir")
 sql_lines.append("-- =====================================================\n")
-sql_lines.append("USE yemekhane_db;\n")
+sql_lines.append("SET NAMES utf8mb4;\nSET CHARACTER SET utf8mb4;\nUSE yemekhane_db;\n")
 
 # 1. Yemekhaneler (2 adet)
 sql_lines.append("-- -----------------------------------------------------")

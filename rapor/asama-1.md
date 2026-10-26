@@ -104,3 +104,4 @@ Replika konteyneri geçici olarak durdurulmuş, bu esnada birincil sunucuda yeni
    6    Caner   340.00
    ```
    *Sonuç: GTID sayesinde replika sunucu bağlantı koptuğu andaki transaction GTID'sinden itibaren eksik logları talep etmiş ve veritabanını tam tutarlılıkla güncellemiştir.*
+
