@@ -4,9 +4,9 @@ from app.dal.reservation_dal import ReservationDAL
 
 class ReservationService:
     @staticmethod
-    def create_reservation(kullanici_id: int, menu_id: int) -> Dict[str, Any]:
+    def create_reservation(kullanici_id: int, menu_id: int, porsiyon: str = "tam") -> Dict[str, Any]:
         try:
-            result = ReservationDAL.make_reservation(kullanici_id, menu_id)
+            result = ReservationDAL.make_reservation(kullanici_id, menu_id, porsiyon)
             return {
                 "message": "Rezervasyonunuz başarıyla oluşturuldu.",
                 "rezervasyon_id": result["rezervasyon_id"],

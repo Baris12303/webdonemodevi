@@ -25,3 +25,40 @@ class UserDAL:
                 )
                 return cursor.fetchone()
 
+    @staticmethod
+    def get_all_allergens():
+        """Tüm alerjenlerin listesi (Okuma: Replica)"""
+        with get_replica_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT id, ad FROM alerjenler ORDER BY id ASC;")
+                return cursor.fetchall()
+
+    @staticmethod
+    def get_user_allergens(user_id: int):
+        """Kullanıcının seçtiği alerjen ID'leri (Okuma: Replica)"""
+        with get_replica_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT alerjen_id FROM kullanici_alerjenleri WHERE kullanici_id = %s;",
+                    (user_id,)
+                )
+                return [row["alerjen_id"] for row in cursor.fetchall()]
+
+    @staticmethod
+    def update_user_allergens(user_id: int, allergen_ids: list[int]):
+        """Kullanıcının alerjen tercihlerini günceller (Yazma: Primary)"""
+        with get_primary_connection() as conn:
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute("DELETE FROM kullanici_alerjenleri WHERE kullanici_id = %s;", (user_id,))
+                    for a_id in allergen_ids:
+                        cursor.execute(
+                            "INSERT INTO kullanici_alerjenleri (kullanici_id, alerjen_id) VALUES (%s, %s);",
+                            (user_id, a_id)
+                        )
+                conn.commit()
+                return True
+            except Exception:
+                conn.rollback()
+                raise
+

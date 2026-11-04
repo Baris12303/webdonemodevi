@@ -24,3 +24,18 @@ def get_me(user: dict = Depends(get_current_user)):
         return latest_user
     return user
 
+@router.get("/allergens", summary="Alerjenler ve Kullanıcı Seçimleri")
+def get_user_allergens(user: dict = Depends(get_current_user)):
+    all_allergens = UserDAL.get_all_allergens()
+    user_allergens = UserDAL.get_user_allergens(user["id"])
+    return {
+        "tum_alerjenler": all_allergens,
+        "secili_alerjenler": user_allergens
+    }
+
+@router.post("/allergens", summary="Kullanıcı Alerjen Tercihlerini Güncelle")
+def update_user_allergens(req: dict, user: dict = Depends(get_current_user)):
+    allergen_ids = req.get("alerjen_ids", [])
+    UserDAL.update_user_allergens(user["id"], allergen_ids)
+    return {"message": "Alerjen tercihleriniz başarıyla kaydedildi."}
+

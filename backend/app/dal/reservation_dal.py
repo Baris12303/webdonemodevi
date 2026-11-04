@@ -4,19 +4,17 @@ from app.db import get_primary_connection, get_replica_connection
 
 class ReservationDAL:
     @staticmethod
-    def make_reservation(kullanici_id: int, menu_id: int) -> Dict[str, Any]:
+    def make_reservation(kullanici_id: int, menu_id: int, porsiyon: str = "tam") -> Dict[str, Any]:
         """
         Rezervasyon yapma işlemi (Yazma: Primary).
         Doğrudan SQL yazılmaz; sp_rezervasyon_yap Stored Procedure'ü çağrılır!
-        Hata durumunda SQLSTATE 45000 mesajı fırlatılır.
-        İşlemden sonra kullanıcının bakiyesi REPLIKASYON GECİKMESİ OLMAMASI İÇİN
-        doğrudan PRIMARY sunucudan okunur.
+        Aşama 4: porsiyon ('tam' veya 'yarim') desteği eklendi.
         """
         with get_primary_connection() as conn:
             try:
                 with conn.cursor() as cursor:
-                    # Stored Procedure Çağrısı
-                    cursor.execute("CALL sp_rezervasyon_yap(%s, %s);", (kullanici_id, menu_id))
+                    # Stored Procedure Çağrısı (3 parametreli güncel versiyon)
+                    cursor.execute("CALL sp_rezervasyon_yap(%s, %s, %s);", (kullanici_id, menu_id, porsiyon))
                     
                     # Oluşturulan rezervasyon id'sini ve anlık güncel bakiyeyi PRIMARY'den oku
                     cursor.execute(
@@ -37,7 +35,6 @@ class ReservationDAL:
                 }
             except pymysql.MySQLError as e:
                 conn.rollback()
-                # SQLSTATE 45000 ve diğer MySQL hata yakalama
                 error_msg = str(e.args[1]) if len(e.args) > 1 else str(e)
                 raise ValueError(error_msg)
 
@@ -76,6 +73,7 @@ class ReservationDAL:
                     og.ad as ogun_adi,
                     yh.ad as yemekhane_adi,
                     r.ucret,
+                    r.porsiyon,
                     r.durum,
                     (r.durum = 'aktif' AND NOW() <= TIMESTAMP(m.tarih, og.son_saat)) as iptal_edilebilir_mi,
                     r.olusturulma_tarihi,

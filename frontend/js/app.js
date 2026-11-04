@@ -8,6 +8,9 @@ const API_BASE = "/api";
 // Uygulama Durumu (State)
 let currentUser = null;
 let currentToken = localStorage.getItem("auth_token") || null;
+let userAllergenNames = []; // Kullanıcının seçtiği alerjenlerin adları
+let userAllergenIds = [];   // Kullanıcının seçtiği alerjen ID'leri
+let allSystemAllergens = []; // Sistemdeki tüm alerjenler
 
 // Toast Bildirim Fonksiyonu
 function showToast(message, type = "info") {
@@ -69,6 +72,7 @@ function showScreen(screenId) {
   if (screenId === "screen-weekly") loadWeeklyMenus();
   if (screenId === "screen-reservations") loadMyReservations();
   if (screenId === "screen-balance") loadBalanceAndHistory();
+  if (screenId === "screen-allergens") loadAllergensScreen();
   if (screenId === "screen-admin") loadAdminDashboard();
 }
 
@@ -80,6 +84,7 @@ async function initAuth() {
     try {
       const user = await apiRequest("/auth/me");
       setUserState(user, currentToken);
+      await loadUserAllergenNames();
       showScreen("screen-today");
     } catch {
       logout();
@@ -128,6 +133,7 @@ async function handleLogin(e) {
   try {
     const res = await apiRequest("/auth/login", "POST", { eposta, sifre });
     setUserState(res.kullanici, res.token);
+    await loadUserAllergenNames();
     showToast(`Hoş geldiniz, ${res.kullanici.ad}!`, "success");
     showScreen("screen-today");
   } catch (err) {
@@ -150,7 +156,7 @@ async function logout() {
 }
 
 // =====================================================
-// 2. EKRAN: GÜNÜN MENÜSÜ (Önbellek & Detay)
+// 2. EKRAN: GÜNÜN MENÜSÜ (Önbellek, Detay, Alerjen Uyarısı & Porsiyon)
 // =====================================================
 async function loadDailyMenu() {
   const container = document.getElementById("daily-menu-content");
@@ -164,7 +170,25 @@ async function loadDailyMenu() {
     const menu = await apiRequest(`/menus/today?yemekhane_id=${yhId}&tarih=${tarih}&ogun_id=${ogunId}`);
     
     // Kullanıcı fiyatını belirle
-    const fiyat = currentUser?.rol === "ogrenci" ? menu.ogrenci_fiyati : menu.personel_fiyati;
+    const tamFiyat = currentUser?.rol === "ogrenci" ? menu.ogrenci_fiyati : menu.personel_fiyati;
+    const yarimFiyat = Math.round(tamFiyat * 0.60 * 100) / 100;
+    const isKahvalti = menu.ogun_id === 1 || menu.ogun_adi === "Kahvaltı";
+
+    // Aşama 4: Alerjen Eşleşme Kontrolü
+    const matchingAllergens = (menu.tum_alerjenler || []).filter(a => userAllergenNames.includes(a));
+    let allergenAlertHtml = "";
+    if (matchingAllergens.length > 0) {
+      allergenAlertHtml = `
+        <div style="background: #fef2f2; border: 1.5px solid #ef4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 15px; color: #991b1b;">
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 0.95rem;">
+            <span>⚠️ DİKKAT: Alerjen Uyarısı!</span>
+          </div>
+          <p style="font-size: 0.85rem; margin-top: 5px; line-height: 1.4;">
+            Bu menü profilinizde kayıtlı alerjenlerinizden <strong>${matchingAllergens.join(', ')}</strong> içermektedir. Sağlığınız için tüketmeden önce lütfen dikkat ediniz!
+          </p>
+        </div>
+      `;
+    }
     
     let dishesHtml = "";
     menu.yemekler.forEach(y => {
@@ -181,15 +205,51 @@ async function loadDailyMenu() {
 
     let allergenBadges = "";
     menu.tum_alerjenler.forEach(a => {
-      allergenBadges += `<span class="badge badge-allergen">⚠️ ${a}</span>`;
+      const isUserAllergen = userAllergenNames.includes(a);
+      allergenBadges += `<span class="badge ${isUserAllergen ? 'badge-allergen' : 'badge-allergen'}" style="${isUserAllergen ? 'border: 1.5px solid #dc2626; font-weight: 700;' : ''}">⚠️ ${a}</span>`;
     });
 
     const cacheBadge = menu.kaynak === "cache" 
       ? '<span class="badge badge-info" title="Bu menü Redis in-memory önbellekten 0.3 ms gecikmeyle getirildi.">⚡ Redis Önbellek</span>' 
       : '<span class="badge badge-veg" title="Menü veritabanından çekildi ve Redis\'e yazıldı.">🗄️ MySQL Replica</span>';
 
+    // Aşama 4: Porsiyon Seçim Alanı
+    let portionSelectorHtml = "";
+    if (isKahvalti) {
+      portionSelectorHtml = `
+        <div style="margin: 15px 0; padding: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase;">Porsiyon Seçimi</span>
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; margin-bottom: 6px;">
+            <input type="radio" name="daily-portion" value="tam" checked onchange="updateDailyPriceDisplay(${tamFiyat})">
+            <span><strong>Tam Porsiyon</strong> - ${tamFiyat.toFixed(2)} TL</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; color: var(--text-muted); cursor: not-allowed; font-size: 0.85rem;">
+            <input type="radio" name="daily-portion" value="yarim" disabled>
+            <span><strong>Yarım Porsiyon (%60)</strong> - <em>Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.</em></span>
+          </label>
+        </div>
+      `;
+    } else {
+      portionSelectorHtml = `
+        <div style="margin: 15px 0; padding: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase;">Porsiyon Seçimi (Aşama 4)</span>
+          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="daily-portion" value="tam" checked onchange="updateDailyPriceDisplay(${tamFiyat})">
+              <span><strong>Tam Porsiyon</strong> (${tamFiyat.toFixed(2)} TL)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="radio" name="daily-portion" value="yarim" onchange="updateDailyPriceDisplay(${yarimFiyat})">
+              <span><strong>Yarım Porsiyon (%60)</strong> (${yarimFiyat.toFixed(2)} TL)</span>
+            </label>
+          </div>
+        </div>
+      `;
+    }
+
     container.innerHTML = `
       <div class="card">
+        ${allergenAlertHtml}
         <div class="card-title">
           <span>${menu.yemekhane_adi} - ${menu.ogun_adi} Menüsü</span>
           ${cacheBadge}
@@ -209,10 +269,12 @@ async function loadDailyMenu() {
           ${allergenBadges}
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+        ${portionSelectorHtml}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
           <div>
-            <span style="font-size: 0.85rem; color: var(--text-muted);">Ücret (${currentUser?.rol}):</span>
-            <div style="font-size: 1.3rem; font-weight: 700; color: var(--primary);">${fiyat.toFixed(2)} TL</div>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Ödenecek Ücret (${currentUser?.rol}):</span>
+            <div id="daily-price-display" style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">${tamFiyat.toFixed(2)} TL</div>
           </div>
           <div style="text-align: right;">
             <span style="font-size: 0.85rem; color: var(--text-muted);">Kalan Kontenjan:</span>
@@ -220,7 +282,7 @@ async function loadDailyMenu() {
           </div>
         </div>
 
-        <button class="btn btn-primary" style="margin-top: 15px;" onclick="handleBookReservation(${menu.menu_id})">
+        <button class="btn btn-primary" style="margin-top: 15px;" onclick="handleBookReservationFromDaily(${menu.menu_id})">
           Bu Menüye Rezervasyon Yap
         </button>
       </div>
@@ -228,6 +290,17 @@ async function loadDailyMenu() {
   } catch (err) {
     container.innerHTML = `<div class="card"><p style="color: var(--danger);">Bu tarih ve öğün için menü kaydı bulunamadı.</p></div>`;
   }
+}
+
+function updateDailyPriceDisplay(amount) {
+  const el = document.getElementById("daily-price-display");
+  if (el) el.textContent = `${parseFloat(amount).toFixed(2)} TL`;
+}
+
+async function handleBookReservationFromDaily(menuId) {
+  const portionInput = document.querySelector('input[name="daily-portion"]:checked');
+  const portion = portionInput ? portionInput.value : "tam";
+  await handleBookReservation(menuId, portion);
 }
 
 // =====================================================
@@ -248,9 +321,11 @@ async function loadWeeklyMenus() {
 
     let html = '<div class="grid-2">';
     menus.forEach(m => {
-      const fiyat = currentUser?.rol === "ogrenci" ? m.ogrenci_fiyati : m.personel_fiyati;
+      const baseFiyat = currentUser?.rol === "ogrenci" ? m.ogrenci_fiyati : m.personel_fiyati;
+      const yarimFiyat = Math.round(baseFiyat * 0.60 * 100) / 100;
       const isPast = m.sure_gecti_mi;
       const isFull = m.kalan_kapasite <= 0;
+      const isKahvalti = m.ogun_adi === "Kahvaltı";
 
       html += `
         <div class="schedule-card">
@@ -267,12 +342,18 @@ async function loadWeeklyMenus() {
             <p style="font-size: 0.9rem; margin: 10px 0;">${m.yemek_listesi || 'Yemek bilgisi yok'}</p>
           </div>
           <div>
-            <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px;">
-              ${fiyat.toFixed(2)} TL
+            <div style="margin-bottom: 8px;">
+              <select id="weekly-portion-${m.menu_id}" style="width: 100%; padding: 5px 8px; font-size: 0.85rem;" onchange="updateWeeklyCardPrice(${m.menu_id}, ${baseFiyat}, ${yarimFiyat})">
+                <option value="tam">Tam Porsiyon (${baseFiyat.toFixed(2)} TL)</option>
+                ${!isKahvalti ? `<option value="yarim">Yarım Porsiyon (%60) (${yarimFiyat.toFixed(2)} TL)</option>` : ''}
+              </select>
+            </div>
+            <div id="weekly-price-${m.menu_id}" style="font-weight: 700; color: var(--primary); margin-bottom: 8px;">
+              ${baseFiyat.toFixed(2)} TL
             </div>
             <button class="btn btn-primary btn-sm" style="width: 100%;" 
               ${(isPast || isFull) ? 'disabled' : ''} 
-              onclick="handleBookReservation(${m.menu_id})">
+              onclick="handleBookReservationFromWeekly(${m.menu_id})">
               ${isPast ? 'Süresi Doldu' : (isFull ? 'Kapasite Dolu' : 'Rezervasyon Yap')}
             </button>
           </div>
@@ -286,10 +367,24 @@ async function loadWeeklyMenus() {
   }
 }
 
-// Rezervasyon Yapma (Stored Procedure Çağrısı)
-async function handleBookReservation(menuId) {
+function updateWeeklyCardPrice(menuId, baseFiyat, yarimFiyat) {
+  const sel = document.getElementById(`weekly-portion-${menuId}`);
+  const priceEl = document.getElementById(`weekly-price-${menuId}`);
+  if (!sel || !priceEl) return;
+  const price = sel.value === "yarim" ? yarimFiyat : baseFiyat;
+  priceEl.textContent = `${price.toFixed(2)} TL`;
+}
+
+async function handleBookReservationFromWeekly(menuId) {
+  const sel = document.getElementById(`weekly-portion-${menuId}`);
+  const portion = sel ? sel.value : "tam";
+  await handleBookReservation(menuId, portion);
+}
+
+// Rezervasyon Yapma (Stored Procedure Çağrısı - porsiyon parametresi ile)
+async function handleBookReservation(menuId, porsiyon = "tam") {
   try {
-    const res = await apiRequest("/reservations", "POST", { menu_id: menuId });
+    const res = await apiRequest("/reservations", "POST", { menu_id: menuId, porsiyon: porsiyon });
     showToast(res.message, "success");
     // Anlık güncel bakiyeyi header'a yansıt (Replication Lag yok!)
     document.getElementById("user-balance").textContent = `${res.guncel_bakiye.toFixed(2)} TL`;
@@ -321,10 +416,17 @@ async function loadMyReservations() {
       else if (r.durum === "kullanildi") statusBadge = '<span class="badge badge-info">Kullanıldı</span>';
       else statusBadge = '<span class="badge badge-allergen">İptal Edildi</span>';
 
+      const portionBadge = r.porsiyon === "yarim"
+        ? '<span class="badge badge-info" style="margin-left: 6px;">Yarım Porsiyon (%60)</span>'
+        : '<span class="badge" style="background: #e2e8f0; color: #334155; margin-left: 6px;">Tam Porsiyon</span>';
+
       html += `
         <div class="card" style="margin-bottom: 12px; padding: 15px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <strong>${r.tarih} - ${r.yemekhane_adi} (${r.ogun_adi})</strong>
+            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+              <strong>${r.tarih} - ${r.yemekhane_adi} (${r.ogun_adi})</strong>
+              ${portionBadge}
+            </div>
             ${statusBadge}
           </div>
           <p style="font-size: 0.85rem; color: var(--text-muted);">${r.yemek_listesi || ''}</p>
@@ -455,6 +557,67 @@ async function handleSendReview(e) {
     showToast(res.message, "success");
     document.getElementById("review-comment").value = "";
     loadMenuReviews(menuId);
+  } catch (err) {}
+}
+
+// =====================================================
+// ALERJEN PROFİLİ YÖNETİMİ (AŞAMA 4)
+// =====================================================
+async function loadUserAllergenNames() {
+  if (!currentToken) return;
+  try {
+    const data = await apiRequest("/auth/allergens");
+    allSystemAllergens = data.tum_alerjenler || [];
+    userAllergenIds = data.secili_alerjenler || [];
+    userAllergenNames = allSystemAllergens
+      .filter(a => userAllergenIds.includes(a.id))
+      .map(a => a.ad);
+  } catch (e) {
+    console.error("Alerjenler yüklenemedi:", e);
+  }
+}
+
+async function loadAllergensScreen() {
+  const container = document.getElementById("allergens-checkbox-list");
+  container.innerHTML = "<p>Alerjen listesi yükleniyor...</p>";
+
+  try {
+    const data = await apiRequest("/auth/allergens");
+    allSystemAllergens = data.tum_alerjenler || [];
+    userAllergenIds = data.secili_alerjenler || [];
+    userAllergenNames = allSystemAllergens
+      .filter(a => userAllergenIds.includes(a.id))
+      .map(a => a.ad);
+
+    if (allSystemAllergens.length === 0) {
+      container.innerHTML = "<p>Sistemde tanımlı alerjen bulunmuyor.</p>";
+      return;
+    }
+
+    let html = "";
+    allSystemAllergens.forEach(a => {
+      const isChecked = userAllergenIds.includes(a.id);
+      html += `
+        <label style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #ffffff; border: 1.5px solid ${isChecked ? 'var(--primary)' : 'var(--border)'}; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;">
+          <input type="checkbox" value="${a.id}" ${isChecked ? 'checked' : ''} class="allergen-chk" onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : 'var(--border)'">
+          <span style="font-weight: 600; font-size: 0.9rem;">⚠️ ${a.ad}</span>
+        </label>
+      `;
+    });
+    container.innerHTML = html;
+  } catch (err) {
+    container.innerHTML = "<p style='color: var(--danger);'>Alerjenler yüklenirken bir hata oluştu.</p>";
+  }
+}
+
+async function saveUserAllergens() {
+  const checkboxes = document.querySelectorAll(".allergen-chk:checked");
+  const selectedIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+
+  try {
+    const res = await apiRequest("/auth/allergens", "POST", { alerjen_ids: selectedIds });
+    showToast(res.message, "success");
+    await loadUserAllergenNames();
   } catch (err) {}
 }
 

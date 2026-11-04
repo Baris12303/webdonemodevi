@@ -12,7 +12,7 @@ def get_my_reservations(user: dict = Depends(get_current_user)):
 
 @router.post("", response_model=ReservationCreateResponse, summary="Rezervasyon Yap (Stored Procedure)")
 def create_reservation(req: ReservationCreateRequest, user: dict = Depends(get_current_user)):
-    return ReservationService.create_reservation(user["id"], req.menu_id)
+    return ReservationService.create_reservation(user["id"], req.menu_id, req.porsiyon)
 
 @router.post("/{rezervasyon_id}/cancel", summary="Rezervasyon İptal Et (Stored Procedure)")
 def cancel_reservation(rezervasyon_id: int, user: dict = Depends(get_current_user)):

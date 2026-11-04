@@ -39,6 +39,7 @@
       <button class="nav-tab" data-screen="screen-weekly" onclick="showScreen('screen-weekly')">Haftalık Menü</button>
       <button class="nav-tab" data-screen="screen-reservations" onclick="showScreen('screen-reservations')">Rezervasyonlarım</button>
       <button class="nav-tab" data-screen="screen-balance" onclick="showScreen('screen-balance')">Bakiye</button>
+      <button class="nav-tab" data-screen="screen-allergens" onclick="showScreen('screen-allergens')">⚠️ Alerjenlerim</button>
       <button class="nav-tab" id="tab-admin" data-screen="screen-admin" style="display: none;" onclick="showScreen('screen-admin')">⚙️ Yönetici Paneli</button>
     </div>
   </nav>
@@ -194,6 +195,20 @@
       <div class="card" style="max-width: 500px; margin: 0 auto;">
         <div class="card-title">Bu Menüye Yapılan Diğer Yorumlar</div>
         <div id="menu-reviews-list"></div>
+      </div>
+    </section>
+
+    <!-- ALERJEN PROFİLİ EKRANI (AŞAMA 4) -->
+    <section id="screen-allergens" class="screen">
+      <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <div class="card-title">⚠️ Kişisel Alerjen Tercihlerim</div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
+          Hassasiyetiniz olan alerjenleri seçin. Menüde bu maddeleri içeren yemekler olduğunda sistem sizi otomatik olarak uyaracaktır.
+        </p>
+        <div id="allergens-checkbox-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px;">
+          <!-- Dinamik Checkbox Listesi -->
+        </div>
+        <button class="btn btn-primary" onclick="saveUserAllergens()">Alerjen Tercihlerimi Kaydet</button>
       </div>
     </section>
 

@@ -14,6 +14,7 @@ class ReservationOut(BaseModel):
     ogun_adi: str
     yemekhane_adi: str
     ucret: float
+    porsiyon: str = "tam"
     durum: str # 'aktif', 'kullanildi', 'iptal'
     iptal_edilebilir_mi: bool
     olusturulma_tarihi: datetime
