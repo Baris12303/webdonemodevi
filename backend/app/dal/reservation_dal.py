@@ -5,18 +5,13 @@ from app.db import get_primary_connection, get_replica_connection
 class ReservationDAL:
     @staticmethod
     def make_reservation(kullanici_id: int, menu_id: int, porsiyon: str = "tam") -> Dict[str, Any]:
-        """
-        Rezervasyon yapma işlemi (Yazma: Primary).
-        Doğrudan SQL yazılmaz; sp_rezervasyon_yap Stored Procedure'ü çağrılır!
-        Aşama 4: porsiyon ('tam' veya 'yarim') desteği eklendi.
-        """
+        """Rezervasyon oluşturma ve bakiye düşümü (sp_rezervasyon_yap çağrılır)"""
         with get_primary_connection() as conn:
             try:
                 with conn.cursor() as cursor:
-                    # Stored Procedure Çağrısı (3 parametreli güncel versiyon)
                     cursor.execute("CALL sp_rezervasyon_yap(%s, %s, %s);", (kullanici_id, menu_id, porsiyon))
                     
-                    # Oluşturulan rezervasyon id'sini ve anlık güncel bakiyeyi PRIMARY'den oku
+                    # Oluşturulan rezervasyon id ve güncel bakiye
                     cursor.execute(
                         "SELECT id FROM rezervasyonlar WHERE kullanici_id = %s AND menu_id = %s AND durum = 'aktif';",
                         (kullanici_id, menu_id)
@@ -40,11 +35,7 @@ class ReservationDAL:
 
     @staticmethod
     def cancel_reservation(kullanici_id: int, rezervasyon_id: int) -> float:
-        """
-        Rezervasyon iptal işlemi (Yazma: Primary).
-        sp_rezervasyon_iptal Stored Procedure'ü çağrılır.
-        İade sonrası güncel bakiye PRIMARY'den okunur.
-        """
+        """Rezervasyon iptali ve ücret iadesi (sp_rezervasyon_iptal çağrılır)"""
         with get_primary_connection() as conn:
             try:
                 with conn.cursor() as cursor:

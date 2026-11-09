@@ -184,3 +184,4 @@ proc_label: BEGIN
 END proc_label$$
 
 DELIMITER ;
+

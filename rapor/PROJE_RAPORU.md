@@ -162,3 +162,4 @@ Canlı sistemde sıfır kesinti ve sıfır veri kaybı prensibiyle iki yeni öze
 
 ---
 *Proje tüm aşamaları, otomatikleştirilmiş testleri ve raporlarıyla teslimata hazır durumdadır.*
+

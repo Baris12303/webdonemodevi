@@ -181,3 +181,4 @@ id: 457 | miktar: +27.00 | tip: iade | aciklama: Rezervasyon iptal iadesi: #366
 
 ## 5. Özet
 Aşama 4 gereksinimleri canlı veritabanında hiçbir kesinti yaşanmadan, GTID replikasyonuyla senkronize şekilde ve arayüz/iş mantığı katmanlarıyla tam uyumlu olarak tamamlanmıştır.
+

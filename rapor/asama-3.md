@@ -91,3 +91,4 @@ Kullanıcı giriş yaptıktan sonra backend konteyneri durdurulup yeniden başla
    docker exec yemekhane-redis redis-cli exists "oturum:f06f37822b904fc685c163cf9714b19e"
    # Çıktı: 0 (Oturum anahtarı anında silindi)
    ```
+

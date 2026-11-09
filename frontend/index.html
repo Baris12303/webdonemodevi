@@ -47,7 +47,7 @@
   <!-- Ana İçerik -->
   <main>
 
-    <!-- 1. EKRAN: GİRİŞ YAP (LOGIN) -->
+    <!-- Giriş Ekranı -->
     <section id="screen-login" class="screen active">
       <div class="card" style="max-width: 420px; margin: 40px auto;">
         <div class="card-title">Giriş Yap</div>
@@ -81,7 +81,7 @@
       </div>
     </section>
 
-    <!-- 2. EKRAN: GÜNÜN MENÜSÜ -->
+    <!-- Günün Menüsü -->
     <section id="screen-today" class="screen">
       <div class="card" style="margin-bottom: 15px; padding: 15px;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
@@ -112,7 +112,7 @@
       </div>
     </section>
 
-    <!-- 3. EKRAN: HAFTALIK MENÜ VE REZERVASYON -->
+    <!-- Haftalık Menü -->
     <section id="screen-weekly" class="screen">
       <div class="card" style="margin-bottom: 15px; padding: 15px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
@@ -132,7 +132,7 @@
       </div>
     </section>
 
-    <!-- 4. EKRAN: REZERVASYONLARIM -->
+    <!-- Rezervasyonlarım -->
     <section id="screen-reservations" class="screen">
       <div class="card-title">Rezervasyonlarım</div>
       <div id="reservations-list">
@@ -140,7 +140,7 @@
       </div>
     </section>
 
-    <!-- 5. EKRAN: BAKİYE YÖNETİMİ & HAREKET GEÇMİŞİ -->
+    <!-- Bakiye Yönetimi -->
     <section id="screen-balance" class="screen">
       <div class="card" style="text-align: center; padding: 30px 20px;">
         <span style="font-size: 0.9rem; color: var(--text-muted); font-weight: 600;">GÜNCEL BAKİYENİZ</span>
@@ -149,7 +149,7 @@
         </div>
 
         <div style="margin-top: 20px;">
-          <label style="margin-bottom: 10px;">Hızlı Bakiye Yükle (Stored Procedure):</label>
+          <label style="margin-bottom: 10px;">Hızlı Bakiye Yükle:</label>
           <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
             <button class="btn btn-primary btn-sm" onclick="handleTopUp(50)">+50 TL</button>
             <button class="btn btn-primary btn-sm" onclick="handleTopUp(100)">+100 TL</button>
@@ -167,7 +167,7 @@
       </div>
     </section>
 
-    <!-- 6. EKRAN: DEĞERLENDİRME -->
+    <!-- Değerlendirme Ekranı -->
     <section id="screen-review" class="screen">
       <div class="card" style="max-width: 500px; margin: 0 auto 20px auto;">
         <div class="card-title">Menüyü Değerlendir</div>
@@ -198,7 +198,7 @@
       </div>
     </section>
 
-    <!-- ALERJEN PROFİLİ EKRANI (AŞAMA 4) -->
+    <!-- Alerjen Tercihleri -->
     <section id="screen-allergens" class="screen">
       <div class="card" style="max-width: 600px; margin: 0 auto;">
         <div class="card-title">⚠️ Kişisel Alerjen Tercihlerim</div>
@@ -212,10 +212,10 @@
       </div>
     </section>
 
-    <!-- 7. EKRAN: YÖNETİCİ PANELİ -->
+    <!-- Yönetici Paneli -->
     <section id="screen-admin" class="screen">
       <div class="card">
-        <div class="card-title">Yeni Menü Oluştur (Cache Invalidation Tetikler)</div>
+        <div class="card-title">Yeni Menü Oluştur</div>
         <form onsubmit="handleCreateMenu(event)">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
             <div class="form-group">
@@ -257,7 +257,7 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Menü Bazında Doluluk ve Puan İstatistikleri (View Raporu)</div>
+        <div class="card-title">Menü Doluluk ve Değerlendirme İstatistikleri</div>
         <div id="admin-stats-table"></div>
       </div>
     </section>

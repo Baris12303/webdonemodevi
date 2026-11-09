@@ -5,11 +5,7 @@ from app.db import get_primary_connection, get_replica_connection
 class BalanceDAL:
     @staticmethod
     def top_up_balance(kullanici_id: int, miktar: float) -> float:
-        """
-        Bakiye yükleme işlemi (Yazma: Primary).
-        Doğrudan SQL yazılmaz; sp_bakiye_yukle Stored Procedure'ü çağrılır!
-        İşlem sonrasında güncel bakiye Primary'den okunarak döndürülür.
-        """
+        """Kullanıcı bakiyesine yükleme yapar (sp_bakiye_yukle çağrılır)"""
         with get_primary_connection() as conn:
             try:
                 with conn.cursor() as cursor:

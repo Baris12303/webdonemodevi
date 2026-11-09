@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/balance", tags=["Bakiye İşlemleri"])
 def get_balance(user: dict = Depends(get_current_user)):
     return BalanceService.get_balance_and_history(user["id"])
 
-@router.post("/topup", summary="Bakiye Yükle (Stored Procedure)")
+@router.post("/topup", summary="Bakiye Yükle")
 def top_up(req: BalanceTopUpRequest, user: dict = Depends(get_current_user)):
     return BalanceService.top_up(user["id"], req.miktar)
 

@@ -1,7 +1,4 @@
-// =====================================================
-// Kampüs Yemekhane Otomasyonu - Vanilla JS Frontend
-// React/Vue çerçevesi kullanılmaz, saf fetch API kullanılır.
-// =====================================================
+// Kampüs Yemekhane Otomasyonu - Frontend Script
 
 const API_BASE = "/api";
 
@@ -76,9 +73,7 @@ function showScreen(screenId) {
   if (screenId === "screen-admin") loadAdminDashboard();
 }
 
-// =====================================================
-// 1. EKRAN: GİRİŞ VE ÇIKIŞ İŞLEMLERİ
-// =====================================================
+// Kimlik Doğrulama İşlemleri
 async function initAuth() {
   if (currentToken) {
     try {
@@ -155,9 +150,7 @@ async function logout() {
   showScreen("screen-login");
 }
 
-// =====================================================
-// 2. EKRAN: GÜNÜN MENÜSÜ (Önbellek, Detay, Alerjen Uyarısı & Porsiyon)
-// =====================================================
+// Günün Menüsü
 async function loadDailyMenu() {
   const container = document.getElementById("daily-menu-content");
   container.innerHTML = "<p>Menü yükleniyor...</p>";
@@ -174,7 +167,7 @@ async function loadDailyMenu() {
     const yarimFiyat = Math.round(tamFiyat * 0.60 * 100) / 100;
     const isKahvalti = menu.ogun_id === 1 || menu.ogun_adi === "Kahvaltı";
 
-    // Aşama 4: Alerjen Eşleşme Kontrolü
+    // Alerjen kontrolü
     const matchingAllergens = (menu.tum_alerjenler || []).filter(a => userAllergenNames.includes(a));
     let allergenAlertHtml = "";
     if (matchingAllergens.length > 0) {
@@ -210,10 +203,10 @@ async function loadDailyMenu() {
     });
 
     const cacheBadge = menu.kaynak === "cache" 
-      ? '<span class="badge badge-info" title="Bu menü Redis in-memory önbellekten 0.3 ms gecikmeyle getirildi.">⚡ Redis Önbellek</span>' 
-      : '<span class="badge badge-veg" title="Menü veritabanından çekildi ve Redis\'e yazıldı.">🗄️ MySQL Replica</span>';
+      ? '<span class="badge badge-info" title="Redis önbellekten yüklendi">⚡ Redis Önbellek</span>' 
+      : '<span class="badge badge-veg" title="Veritabanından okundu">🗄️ MySQL Replica</span>';
 
-    // Aşama 4: Porsiyon Seçim Alanı
+    // Porsiyon seçimi
     let portionSelectorHtml = "";
     if (isKahvalti) {
       portionSelectorHtml = `
@@ -232,7 +225,7 @@ async function loadDailyMenu() {
     } else {
       portionSelectorHtml = `
         <div style="margin: 15px 0; padding: 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px;">
-          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase;">Porsiyon Seçimi (Aşama 4)</span>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 8px; text-transform: uppercase;">Porsiyon Seçimi</span>
           <div style="display: flex; gap: 20px; flex-wrap: wrap;">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
               <input type="radio" name="daily-portion" value="tam" checked onchange="updateDailyPriceDisplay(${tamFiyat})">
@@ -303,9 +296,7 @@ async function handleBookReservationFromDaily(menuId) {
   await handleBookReservation(menuId, portion);
 }
 
-// =====================================================
-// 3. EKRAN: HAFTALIK MENÜ VE REZERVASYON
-// =====================================================
+// Haftalık Menü
 async function loadWeeklyMenus() {
   const container = document.getElementById("weekly-menu-list");
   container.innerHTML = "<p>Haftalık menüler yükleniyor...</p>";
@@ -395,9 +386,7 @@ async function handleBookReservation(menuId, porsiyon = "tam") {
   }
 }
 
-// =====================================================
-// 4. EKRAN: REZERVASYONLARIM
-// =====================================================
+// Rezervasyonlarım
 async function loadMyReservations() {
   const container = document.getElementById("reservations-list");
   container.innerHTML = "<p>Rezervasyonlarınız yükleniyor...</p>";
@@ -465,9 +454,7 @@ async function handleCancelReservation(rezId) {
   } catch (err) {}
 }
 
-// =====================================================
-// 5. EKRAN: BAKİYE YÖNETİMİ & HAREKET GEÇMİŞİ
-// =====================================================
+// Bakiye ve Hareket Geçmişi
 async function loadBalanceAndHistory() {
   try {
     const data = await apiRequest("/balance");
@@ -510,9 +497,7 @@ async function handleTopUp(amount) {
   } catch (err) {}
 }
 
-// =====================================================
-// 6. EKRAN: DEĞERLENDİRME
-// =====================================================
+// Değerlendirme İşlemleri
 function openReviewModal(menuId) {
   document.getElementById("review-menu-id").value = menuId;
   showScreen("screen-review");
@@ -560,9 +545,7 @@ async function handleSendReview(e) {
   } catch (err) {}
 }
 
-// =====================================================
-// ALERJEN PROFİLİ YÖNETİMİ (AŞAMA 4)
-// =====================================================
+// Alerjen Tercihleri
 async function loadUserAllergenNames() {
   if (!currentToken) return;
   try {
@@ -621,9 +604,7 @@ async function saveUserAllergens() {
   } catch (err) {}
 }
 
-// =====================================================
-// 7. EKRAN: YÖNETİCİ PANELİ
-// =====================================================
+// Yönetici Paneli
 async function loadAdminDashboard() {
   loadAdminStats();
   loadDishesForAdmin();

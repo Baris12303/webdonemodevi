@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 class ReservationCreateRequest(BaseModel):
     menu_id: int
-    porsiyon: Optional[str] = "tam" # Aşama 4 için uyumlu ("tam", "yarim")
+    porsiyon: Optional[str] = "tam"
 
 class ReservationOut(BaseModel):
     id: int

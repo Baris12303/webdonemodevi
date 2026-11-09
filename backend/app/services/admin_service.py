@@ -32,7 +32,7 @@ class AdminService:
                 personel_fiyati=data.get("personel_fiyati"),
                 yemek_ids=data.get("yemek_ids")
             )
-            # Menü güncellendiğinde Redis cache'ini temizle (Aşama 3 kuralı)
+            # Menü güncellendiğinde Redis önbelleğini temizle
             invalidate_menu_cache(info["yemekhane_id"], info["tarih"].isoformat(), info["ogun_id"])
             return {"message": "Menü başarıyla güncellendi ve önbellek temizlendi."}
         except ValueError as e:
