@@ -4,64 +4,70 @@
   <meta charset="UTF-8">
   <title>Kampüs Yemekhane Otomasyon Sistemi - Proje Raporu</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
     :root {
       --primary: #0284c7;
       --text: #0f172a;
       --text-muted: #475569;
-      --bg: #ffffff;
-      --code-bg: #f8fafc;
       --border: #e2e8f0;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--text);
       background: #f1f5f9;
       line-height: 1.6;
-      padding: 40px 20px;
+      padding: 30px 16px;
     }
 
     .report-container {
       max-width: 900px;
       margin: 0 auto;
       background: #ffffff;
-      padding: 60px 80px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      padding: 50px 64px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     }
 
     .cover {
       text-align: center;
-      padding-bottom: 50px;
+      padding-bottom: 32px;
       border-bottom: 2px solid var(--border);
-      margin-bottom: 40px;
+      margin-bottom: 28px;
+    }
+
+    .cover .dept {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      text-transform: uppercase;
     }
 
     .cover h1 {
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 800;
       color: var(--primary);
-      margin: 15px 0 10px 0;
+      margin: 12px 0 6px 0;
     }
 
     .cover h2 {
-      font-size: 1.2rem;
-      font-weight: 600;
+      font-size: 1.05rem;
+      font-weight: 500;
       color: var(--text-muted);
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .meta-grid {
       display: inline-grid;
       grid-template-columns: auto auto;
-      gap: 8px 24px;
+      gap: 8px 28px;
       text-align: left;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       background: #f8fafc;
-      padding: 18px 28px;
+      padding: 16px 24px;
       border-radius: 8px;
       border: 1px solid var(--border);
     }
@@ -69,43 +75,40 @@
     .meta-grid strong { color: var(--primary); }
 
     h2.section-title {
-      font-size: 1.4rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #0f172a;
-      margin: 40px 0 16px 0;
-      padding-bottom: 8px;
+      margin: 30px 0 12px 0;
+      padding-bottom: 6px;
       border-bottom: 2px solid var(--primary);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
 
     h3 {
-      font-size: 1.1rem;
+      font-size: 1.02rem;
       font-weight: 600;
-      margin: 24px 0 10px 0;
+      margin: 18px 0 8px 0;
       color: #1e293b;
     }
 
     p, ul, ol {
-      margin-bottom: 14px;
-      font-size: 0.95rem;
+      margin-bottom: 12px;
+      font-size: 0.92rem;
       color: #334155;
     }
 
-    ul, ol { padding-left: 24px; }
-    li { margin-bottom: 6px; }
+    ul, ol { padding-left: 22px; }
+    li { margin-bottom: 5px; }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 20px 0;
-      font-size: 0.9rem;
+      margin: 14px 0;
+      font-size: 0.86rem;
     }
 
     th, td {
       border: 1px solid var(--border);
-      padding: 10px 14px;
+      padding: 8px 12px;
       text-align: left;
     }
 
@@ -117,23 +120,23 @@
 
     code {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.88rem;
+      font-size: 0.84rem;
       background: #f1f5f9;
       color: #0369a1;
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
     }
 
     pre {
       background: #0f172a;
       color: #f8fafc;
-      padding: 16px 20px;
-      border-radius: 8px;
+      padding: 12px 16px;
+      border-radius: 6px;
       overflow-x: auto;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      margin: 16px 0;
-      line-height: 1.5;
+      font-size: 0.82rem;
+      margin: 12px 0;
+      line-height: 1.45;
     }
 
     pre code {
@@ -142,36 +145,50 @@
       padding: 0;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 3px 8px;
-      border-radius: 6px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    .badge-success { background: #dcfce7; color: #15803d; }
-    .badge-info { background: #e0f2fe; color: #0369a1; }
-    .badge-warn { background: #fef3c7; color: #b45309; }
-
-    .alert-box {
-      background: #fef2f2;
-      border-left: 4px solid #ef4444;
-      padding: 14px 18px;
-      border-radius: 0 8px 8px 0;
-      margin: 16px 0;
-      font-size: 0.92rem;
-      color: #991b1b;
-    }
-
     .info-box {
       background: #f0f9ff;
       border-left: 4px solid var(--primary);
-      padding: 14px 18px;
-      border-radius: 0 8px 8px 0;
+      padding: 12px 16px;
+      border-radius: 0 6px 6px 0;
+      margin: 14px 0;
+      font-size: 0.9rem;
+      color: #0c4a6e;
+    }
+
+    .screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
       margin: 16px 0;
-      font-size: 0.92rem;
-      color: #0369a1;
+    }
+
+    .screenshot-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: #f8fafc;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+
+    .screenshot-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+      border: 1px solid #cbd5e1;
+      display: block;
+    }
+
+    .screenshot-card.mobile img {
+      max-width: 240px;
+      margin: 0 auto;
+    }
+
+    .screenshot-caption {
+      margin-top: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
     }
 
     @media print {
@@ -183,217 +200,229 @@
   </style>
 </head>
 <body>
-
   <div class="report-container">
-    
-    <!-- KAPAK -->
     <div class="cover">
-      <div style="font-size: 0.95rem; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase;">
-        T.C. ÜNİVERSİTESİ • BİLGİSAYAR MÜHENDİSLİĞİ BÖLÜMÜ
-      </div>
+      <div class="dept">Web Teknolojileri Dersi • Dönem Ödevi Proje Raporu</div>
       <h1>Kampüs Yemekhane Otomasyon Sistemi</h1>
-      <h2>Web Teknolojileri Dersi Dönem Ödevi Proje ve Savunma Raporu</h2>
-      
+      <h2>Docker Tabanlı, GTID Replikasyonlu, Katmanlı Mimari ve Redis Destekli Web Uygulaması</h2>
       <div class="meta-grid">
         <div><strong>Ders:</strong> Web Teknolojileri</div>
-        <div><strong>Ders Sorumlusu:</strong> Burak Yılmaz</div>
-        <div><strong>Mimari:</strong> Seçenek B (REST API + Saf Vanilla JS)</div>
-        <div><strong>Konteyner:</strong> Docker Compose (6 Servis)</div>
-        <div><strong>Teslim Tarihi:</strong> 10 Kasım 2026, 23:59</div>
-        <div><strong>Durum:</strong> <span class="badge badge-success">Tüm Aşamalar Tamamlandı (100/100)</span></div>
+        <div><strong>Öğretim Üyesi:</strong> Burak Yılmaz</div>
+        <div><strong>Mimari Seçimi:</strong> Seçenek B (Web API + Saf HTML/CSS/Vanilla JS)</div>
+        <div><strong>Altyapı:</strong> Docker Compose (6 Servis)</div>
+        <div><strong>Backend:</strong> Python 3.11 / FastAPI</div>
+        <div><strong>Veritabanı &amp; Önbellek:</strong> MySQL 8.0 (Primary/Replica) + Redis 7</div>
       </div>
     </div>
 
-    <!-- 1. GENEL MİMARİ -->
-    <h2 class="section-title">1. Proje Özeti ve Konteyner Topolojisi</h2>
-    <p>
-      Bu projede kampüs yemekhanelerinin operasyonel süreçlerini (menü planlama, rezervasyon alma, turnike geçiş kontrolü, anlık bakiye yönetimi ve öğrenci değerlendirmeleri) yürüten, kurumsal standartlarda, yüksek erişilebilirlikli ve hataya dayanıklı (fault-tolerant) bir otomasyon web sistemi geliştirilmiştir.
-    </p>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Konteyner Servisi</th>
-          <th>İmaj & Port</th>
-          <th>Görevi ve Üstlendiği Rol</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>yemekhane-mysql-primary</strong></td>
-          <td><code>mysql:8.0</code> (:3307)</td>
-          <td>GTID ikili log (binlog) tutan, tüm veri yazma ve DDL işlemlerinin yapıldığı ana ilişkisel veritabanı.</td>
-        </tr>
-        <tr>
-          <td><strong>yemekhane-mysql-replica</strong></td>
-          <td><code>mysql:8.0</code> (:3308)</td>
-          <td><code>super_read_only = ON</code> kipine kilitlenmiş, tüm okuma (SELECT) yükünü üstlenen salt-okunur veritabanı.</td>
-        </tr>
-        <tr>
-          <td><strong>yemekhane-replica-setup</strong></td>
-          <td><code>mysql:8.0</code> (Geçici)</td>
-          <td>Primary ve Replica konteynerleri ayağa kalktığında replikasyonu <code>SOURCE_AUTO_POSITION = 1</code> ile başlatan otomatik kurulum konteyneri.</td>
-        </tr>
-        <tr>
-          <td><strong>yemekhane-redis</strong></td>
-          <td><code>redis:7-alpine</code> (:6379)</td>
-          <td>Menü verilerini gün sonuna kadar önbelleğe alan ve durumsuz oturumları (token) 30 dk TTL ile saklayan in-memory deposu.</td>
-        </tr>
-        <tr>
-          <td><strong>yemekhane-uygulama</strong></td>
-          <td><code>python:3.11-slim</code> (:8000)</td>
-          <td>FastAPI ile N-katmanlı mimaride (Routers $\rightarrow$ Services $\rightarrow$ DAL) inşa edilmiş RESTful API servisi.</td>
-        </tr>
-        <tr>
-          <td><strong>yemekhane-frontend</strong></td>
-          <td><code>httpd:2.4-alpine</code> (:8080)</td>
-          <td>Apache 2.4 üzerinde koşan, saf HTML5, CSS3 ve Vanilla JS ile hazırlanmış, mobil uyumlu ters vekil (reverse proxy) sunucusu.</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="page-break"></div>
-
-    <!-- 2. AŞAMA 1 -->
-    <h2 class="section-title">2. Aşama 1: GTID Replikasyon ve Altyapı Doğrulaması (15 Puan)</h2>
-    <p>
-      Geleneksel dosya adı ve ofset yerine <strong>GTID (Global Transaction Identifier)</strong> mimarisi kullanılmıştır. Böylece her transaction küresel tekil UUID ile etiketlenir ve replika olası bağlantı kopmalarında eksik logları otomatik tamamlar.
-    </p>
-
-    <h3>2.1. Salt-Okunur Güvenliği (Super Read Only Testi)</h3>
-    <pre><code>docker exec yemekhane-mysql-replica mysql -uroot -prootpass -e "INSERT INTO yemekhane_db.yemekler (ad, kategori_id, kalori) VALUES ('Kaçak', 1, 100);"
-# Çıktı: ERROR 1290 (HY000): The MySQL server is running with the --super-read-only option so it cannot execute this statement</code></pre>
-
-    <h3>2.2. Replika Catch-Up ve Gecikme Kontrolü</h3>
-    <pre><code>docker exec yemekhane-mysql-replica mysql -uroot -prootpass -e "SHOW REPLICA STATUS\G"
-# Replica_IO_Running: Yes | Replica_SQL_Running: Yes | Seconds_Behind_Source: 0
-# Retrieved_Gtid_Set: 276689ca-d22f-11f1-83df-82c025f371df:1-56</code></pre>
-
-    <!-- 3. AŞAMA 2 -->
-    <h2 class="section-title">3. Aşama 2: Katmanlı Mimari, Stored Procedures ve 7 Ekran (40 Puan)</h2>
-    <p>
-      Uygulama kodu katı sorumluluk sınırlarıyla tasarlanmıştır:
-      <code>Routers</code> $\rightarrow$ <code>Services</code> $\rightarrow$ <code>DAL</code>.
-    </p>
-    <ul>
-      <li><strong>Stored Procedure'ler:</strong> <code>sp_rezervasyon_yap</code>, <code>sp_rezervasyon_iptal</code>, <code>sp_bakiye_yukle</code>, <code>sp_turnike_gecis</code> yordamları ile tüm kritik kurallar veritabanı transaction seviyesinde güvenceye alınmıştır.</li>
-      <li><strong>SQLSTATE 45000 Yakalama:</strong> Stored Procedure'lerden dönen kural ihlalleri backend'de yakalanıp HTTP 400 Bad Request olarak kullanıcıya iletilir.</li>
-      <li><strong>Replication Lag Önlemi:</strong> Bakiye yükleme veya rezervasyon sonrasında kullanıcıya dönen bakiye, replika gecikmesine takılmamak için doğrudan Primary havuzundan okunur (<code>use_primary=True</code>).</li>
-      <li><strong>7 Duyarlı Ekran:</strong> Login, Günün Menüsü, Haftalık Menü, Rezervasyonlarım, Bakiye Yönetimi, Değerlendirme ve Yönetici Paneli ekranları saf Vanilla JS ile üretilmiştir.</li>
-    </ul>
-
-    <div class="page-break"></div>
-
-    <!-- 4. AŞAMA 3 -->
-    <h2 class="section-title">4. Aşama 3: Redis Önbellek ve Durumsuz Oturum (15 Puan)</h2>
-    
-    <h3>4.1. Menü Önbellek Akışı ve TTL</h3>
-    <pre><code># 1. İstek (Cache Miss - DB'den okundu ve Redis'e yazıldı):
-INFO: redis: [CACHE MISS] Menü Redis'te yok: menu:1:2026-10-27:2 (TTL: 19171 sn)
-# 2. İstek (Cache Hit - Doğrudan RAM'den 0.2 ms gecikmeyle getirildi):
-INFO: redis: [CACHE HIT] Menü Redis'ten getirildi: menu:1:2026-10-27:2 (kaynak: cache)</code></pre>
-
-    <h3>4.2. Önbellek Geçersizleştirme (Cache Invalidation)</h3>
-    <p>
-      Yönetici menü fiyatını veya yemeklerini güncellediğinde (<code>PUT /api/admin/menus/44</code>), Redis'teki ilgili anahtar anında silinir (<code>DEL menu:1:2026-10-27:2</code>).
-    </p>
-
-    <h3>4.3. Durumsuz (Stateless) Oturum Doğrulaması</h3>
     <div class="info-box">
-      <strong>Konteyner Yeniden Başlatma Testi:</strong> Kullanıcı oturum açtıktan sonra backend konteyneri durdurulup yeniden başlatılmıştır (<code>docker restart yemekhane-uygulama</code>). Oturum Redis üzerinde tutulduğu için kullanıcının oturumu düşmemiş, <code>GET /api/auth/me</code> kesintisiz HTTP 200 OK yanıtı vermiştir.
+      <strong>Mimari Seçimi (Seçenek B):</strong> Bu projede <strong>Web API + Ayrı İstemci</strong> yaklaşımı seçilmiştir. Sunucu tarafında FastAPI ile JSON REST API geliştirilmiş; istemci tarafında ise React/Vue gibi çerçeveler kullanılmadan saf HTML5, CSS3 ve Vanilla JS (<code>fetch</code>) ile duyarlı (responsive) arayüz oluşturulmuştur. Tüm istekler Apache 2.4 ters vekili (<code>:8080</code>) üzerinden karşılanır; <code>/api/*</code> istekleri iç ağda <code>uygulama:8000</code> servisine yönlendirilir.
     </div>
 
-    <!-- 5. AŞAMA 4 -->
-    <h2 class="section-title">5. Aşama 4: Değişiklik Talebi (Migration) ve Yeni Özellikler (20 Puan)</h2>
+    <h2 class="section-title">1. Aşama 1: Altyapı ve Veritabanı Replikasyonu</h2>
     <p>
-      Canlı sistemi ve mevcut verileri bozmadan <code>db/04_degisiklik.sql</code> ile iki yeni gereksinim uygulanmıştır:
+      Sistem <code>docker-compose.yml</code> üzerinden tek komutla (<code>docker compose up -d</code>) ayağa kalkacak şekilde 6 servis olarak yapılandırılmıştır:
     </p>
-
-    <h3>5.1. Yarım Porsiyon Kuralları ve Doğrulama</h3>
-    <ul>
-      <li><strong>Kahvaltı Kısıtı:</strong> Kahvaltıda yarım porsiyon istenirse SP <code>SIGNAL SQLSTATE '45000'</code> fırlatır:
-        <pre><code>POST /api/reservations {"menu_id": 49, "porsiyon": "yarim"}
-# Çıktı (HTTP 400): {"detail": "Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır."}</code></pre>
-      </li>
-      <li><strong>Öğle/Akşam %60 Fiyat Hesabı:</strong> Normalde 45.00 TL olan öğle menüsünde yarım porsiyon seçildiğinde bakiyeden tam olarak 27.00 TL (<code>45.00 * 0.60</code>) düşmüş, rezervasyon iptal edildiğinde ise 27.00 TL eksiksiz iade edilmiştir.</li>
-    </ul>
-
-    <h3>5.2. Kullanıcı Alerjen Uyarısı</h3>
-    <div class="alert-box">
-      <strong>⚠️ DİKKAT: Alerjen Uyarısı!</strong><br>
-      Bu menü profilinizde kayıtlı alerjenlerinizden <strong>Gluten, Laktoz</strong> içermektedir. Sağlığınız için tüketmeden önce lütfen dikkat ediniz!
-    </div>
-    <p>
-      Kullanıcı profiline alerjenlerini kaydettiğinde, günün menüsünde bu maddeleri içeren yemekler varsa arayüzün en üstünde yukarıdaki kırmızı uyarı kutusu görüntülenmektedir.
-    </p>
-
-    <div class="page-break"></div>
-
-    <!-- 6. COMMIT GEÇMİŞİ VE SAVUNMA -->
-    <h2 class="section-title">6. Git Commit Geçmişi ve Savunma Notları (10 Puan)</h2>
-    <p>
-      Geliştirme süreci şartnameye uygun olarak 3 haftaya yayılmış, doğal çalışma saatleriyle mühürlenmiştir:
-    </p>
-
     <table>
       <thead>
         <tr>
-          <th>Commit Hash</th>
-          <th>Tarih ve Saat</th>
-          <th>Git Tag</th>
-          <th>Commit Mesajı</th>
+          <th>Servis Adı</th>
+          <th>İmaj / Port</th>
+          <th>Görev</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>dc7d599</code></td>
-          <td>2026-10-22 16:38:24</td>
-          <td><span class="badge badge-info">asama-1</span></td>
-          <td>feat(asama-1): docker compose altyapisi, sema, ornek veri ve GTID replikasyon kurulumu</td>
+          <td><code>mysql-primary</code></td>
+          <td><code>mysql:8.0</code> (:3307)</td>
+          <td>GTID ikili log (binlog) tutan birincil yazma veritabanı.</td>
         </tr>
         <tr>
-          <td><code>70469dc</code></td>
-          <td>2026-10-26 21:14:38</td>
-          <td><span class="badge badge-info">asama-2</span></td>
-          <td>feat(asama-2): FastAPI katmanli mimari, SP entegrasyonu ve 7 duyarlı ekran</td>
+          <td><code>mysql-replica</code></td>
+          <td><code>mysql:8.0</code> (:3308)</td>
+          <td><code>super_read_only = ON</code> kipinde çalışan salt-okunur okuma replikası.</td>
         </tr>
         <tr>
-          <td><code>a41bec1</code></td>
-          <td>2026-10-31 14:47:19</td>
-          <td><span class="badge badge-info">asama-3</span></td>
-          <td>feat(asama-3): Redis menu onbellegi, oturum yonetimi ve cache invalidation</td>
+          <td><code>replica-setup</code></td>
+          <td><code>mysql:8.0</code></td>
+          <td><code>SOURCE_AUTO_POSITION = 1</code> ile replikasyonu başlatan ve <code>super_read_only</code> ayarlayan kurulum servisi.</td>
         </tr>
         <tr>
-          <td><code>04763d6</code></td>
-          <td>2026-11-04 15:23:41</td>
-          <td><span class="badge badge-info">asama-4</span></td>
-          <td>feat(asama-4): Degisiklik talebi - yarim porsiyon (%60) ve kullanici alerjen uyari sistemi</td>
+          <td><code>redis</code></td>
+          <td><code>redis:7-alpine</code> (:6379)</td>
+          <td>Menü önbelleği ve oturum deposu (in-memory).</td>
+        </tr>
+        <tr>
+          <td><code>uygulama</code></td>
+          <td><code>python:3.11-slim</code> (:8000)</td>
+          <td>FastAPI katmanlı REST API sunucusu.</td>
+        </tr>
+        <tr>
+          <td><code>frontend</code></td>
+          <td><code>httpd:2.4-alpine</code> (:8080)</td>
+          <td>Statik HTML/CSS/JS sunumu ve <code>/api</code> reverse proxy.</td>
         </tr>
       </tbody>
     </table>
 
-    <h3>Canlı Sunum / Sözlü Savunma Soruları İçin Hızlı Cevap Rehberi:</h3>
-    <ul>
-      <li><strong>Hoca:</strong> "Replika sunucusuna doğrudan INSERT atabilir misin?"<br>
-        <strong>Cevap:</strong> "Hayır hocam, replikada <code>super_read_only = ON</code> aktiftir. Root dahil kimse yazamaz, doğrudan ERROR 1290 fırlatılır. Yazma sadece Primary'e yapılır ve GTID ile replikaya akar."
-      </li>
-      <li><strong>Hoca:</strong> "Replication Lag durumunda kullanıcı eski bakiyesini görmez mi?"<br>
-        <strong>Cevap:</strong> "Görmez hocam. Bakiye yükleme ve rezervasyon sonrasında dönen bakiye, <code>db.py</code> üzerinden doğrudan Primary veritabanından okunur (<code>use_primary=True</code>)."
-      </li>
-      <li><strong>Hoca:</strong> "Backend çökerse öğrencinin oturumu kapanır mı?"<br>
-        <strong>Cevap:</strong> "Kapanmaz hocam. Backend 'stateless' (durumsuz) mimaridedir. Oturum token'ları Redis üzerinde saklanır. Backend'i restart etsek bile oturum devam eder."
-      </li>
-      <li><strong>Hoca:</strong> "Yarım porsiyon kuralı nerede denetleniyor?"<br>
-        <strong>Cevap:</strong> "Frontend ve backend validasyonlarının yanı sıra asıl garanti veritabanındaki <code>sp_rezervasyon_yap</code> Stored Procedure'ü içindedir. Kahvaltıda istenirse SP <code>SIGNAL SQLSTATE 45000</code> fırlatarak işlemi transaction seviyesinde rollback eder."
-      </li>
-    </ul>
+    <h3>1.1. GTID Replikasyon ve Salt-Okunur Doğrulaması</h3>
+    <pre><code># 1. Replika durumu kontrolü
+docker exec yemekhane-mysql-replica mysql -uroot -prootpass -e "SHOW REPLICA STATUS\G"
+# Çıktı: Replica_IO_Running: Yes | Replica_SQL_Running: Yes | Seconds_Behind_Source: 0
 
-    <div style="text-align: center; margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-muted);">
-      Kampüs Yemekhane Otomasyon Sistemi © 2026 • Tüm Hakları Saklıdır
+# 2. Replikaya doğrudan yazma engeli testi (super_read_only)
+docker exec yemekhane-mysql-replica mysql -uroot -prootpass -e "INSERT INTO yemekhane_db.yemekler (ad, kategori_id, kalori) VALUES ('Test', 1, 100);"
+# Çıktı: ERROR 1290 (HY000): The MySQL server is running with the --super-read-only option so it cannot execute this statement
+
+# 3. Replika durdurma / yeniden başlatma senkronizasyon testi
+docker stop yemekhane-mysql-replica
+# Primary üzerinde bakiye yükleme işlemi yapıldıktan sonra:
+docker start yemekhane-mysql-replica
+# Replika GTID üzerinden eksik transaction'ları otomatik çekip Seconds_Behind_Source: 0 durumuna döndü.</code></pre>
+
+    <div class="page-break"></div>
+
+    <h2 class="section-title">2. Aşama 2: Katmanlı Mimari, Stored Procedure ve Arayüz</h2>
+    <p>
+      Backend uygulaması 4 katmanlı olarak tasarlanmıştır: <strong>Routers</strong> (HTTP yönlendirme ve Pydantic doğrulama) &rarr; <strong>Services</strong> (iş kuralları, önbellek yönetimi, hata dönüşümü) &rarr; <strong>DAL</strong> (Primary/Replica bağlantı havuzu seçimi ve SQL/SP çağrıları) &rarr; <strong>MySQL</strong> (Tablolar, View'ler ve Stored Procedure'ler).
+    </p>
+
+    <h3>2.1. Bir İsteğin Uygulama İçindeki Yolu (Örnek: Rezervasyon Yapma)</h3>
+    <ol>
+      <li><strong>İstemci &amp; Ters Vekil:</strong> Kullanıcı arayüzden porsiyon seçip "Bu Menüye Rezervasyon Yap" butonuna tıklar. <code>app.js</code> <code>POST /api/reservations</code> isteğini Bearer token ile gönderir. Apache bu isteği <code>uygulama:8000</code> servisine iletir.</li>
+      <li><strong>Router (<code>app/routers/reservations.py</code>):</strong> <code>get_current_user</code> bağımlılığı Redis üzerinden token'ı doğrular. İstek gövdesi <code>ReservationCreateRequest</code> şemasıyla doğrulanır ve <code>ReservationService.create_reservation(...)</code> çağrılır.</li>
+      <li><strong>Service (<code>app/services/reservation_service.py</code>):</strong> <code>ReservationDAL.make_reservation(...)</code> çağrısını yürütür. Stored Procedure'den gelen <code>SQLSTATE 45000</code> hata mesajlarını yakalayıp HTTP <code>400 Bad Request</code> JSON yanıtına dönüştürür.</li>
+      <li><strong>DAL &amp; Veritabanı (<code>app/dal/reservation_dal.py</code>):</strong> <code>get_primary_connection()</code> ile <strong>Primary</strong> veritabanına bağlanır, <code>CALL sp_rezervasyon_yap(kullanici_id, menu_id, porsiyon)</code> prosedürünü çalıştırır. Prosedür; saat, kapasite, mükerrer kayıt ve bakiye kontrollerini <code>FOR UPDATE</code> satır kilitleriyle atomik olarak gerçekleştirir.</li>
+    </ol>
+
+    <h3>2.2. Replikasyon Gecikmesi (Replication Lag) Önlemi</h3>
+    <p>
+      Listeleme ve menü sorguları <code>get_replica_connection()</code> üzerinden replika sunucusuna yönlendirilir. Ancak <strong>rezervasyon yapma, rezervasyon iptali ve bakiye yükleme</strong> işlemlerinin hemen ardından kullanıcıya gösterilen güncel bakiye değeri doğrudan <strong>Primary</strong> veritabanından (<code>get_primary_connection()</code> / <code>use_primary=True</code>) okunur. Bunun nedeni, asenkron replikasyonda milisaniyelik dahi olsa gecikme (replication lag) yaşandığında kullanıcının ekranda eski/bayat bakiyesini görmesini önlemektir.
+    </p>
+
+    <h3>2.3. Stored Procedure ve Hata Mesajı Doğrulaması (SQLSTATE 45000)</h3>
+    <pre><code># Bakiye yetersizliği veya son saat sonrası rezervasyon denemesi:
+POST /api/reservations {"menu_id": 44, "porsiyon": "tam"}
+# HTTP 400 Bad Request
+{"detail": "Rezervasyon süresi dolmuştur."}</code></pre>
+
+    <div class="page-break"></div>
+
+    <h2 class="section-title">3. Aşama 3: Redis Önbellek ve Oturum Yönetimi</h2>
+    <p>Redis iki temel amaç için kullanılmıştır:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Görev</th>
+          <th>Anahtar Şablonu</th>
+          <th>Geçerlilik Süresi (TTL)</th>
+          <th>Geçersizleştirme (Invalidation)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Menü Önbelleği</strong></td>
+          <td><code>menu:{yemekhane_id}:{tarih}:{ogun_id}</code></td>
+          <td>Günün sonuna kadar (<code>23:59:59</code>)</td>
+          <td>Yönetici menüyü güncellediğinde veya değerlendirme eklendiğinde</td>
+        </tr>
+        <tr>
+          <td><strong>Oturum Deposu</strong></td>
+          <td><code>oturum:{token}</code></td>
+          <td>30 dakika (Sliding Expiration)</td>
+          <td>Kullanıcı çıkış yaptığında (<code>POST /api/auth/logout</code>)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>3.1. Redis Doğrulama Çıktıları</h3>
+    <pre><code># 1. İlk menü isteği (Cache Miss -> DB okuma -> Cache Set) ve ikinci istek (Cache Hit)
+[INFO] redis: [CACHE MISS] Menü Redis'te yok, DB'den okunacak: menu:1:2026-10-27:2
+[INFO] redis: [CACHE SET] Menü Redis'e yazıldı: menu:1:2026-10-27:2 (TTL: 19171 sn)
+[INFO] redis: [CACHE HIT] Menü Redis'ten getirildi: menu:1:2026-10-27:2
+
+# 2. redis-cli üzerinden anahtar ve TTL kontrolü
+docker exec yemekhane-redis redis-cli ttl "menu:1:2026-10-27:2"
+# Çıktı: 19148
+
+# 3. Yönetici menü güncellemesi sonrası Cache Invalidation
+PUT /api/admin/menus/44 {"ogrenci_fiyati": 50.0}
+docker exec yemekhane-redis redis-cli exists "menu:1:2026-10-27:2"
+# Çıktı: 0
+
+# 4. Durumsuz (Stateless) backend doğrulaması:
+docker restart yemekhane-uygulama
+GET /api/auth/me (Aynı token ile) -> HTTP 200 OK (Oturum düşmedi)
+POST /api/auth/logout -> docker exec yemekhane-redis redis-cli exists "oturum:..." -> 0</code></pre>
+
+    <h2 class="section-title">4. Aşama 4: Değişiklik Talebi (Migration) ve Yeni Özellikler</h2>
+    <p>
+      <code>db/04_degisiklik.sql</code> betiği ile canlı veri korunarak <code>rezervasyonlar</code> tablosuna <code>porsiyon ENUM('tam', 'yarim') NOT NULL DEFAULT 'tam'</code> sütunu ve <code>kullanici_alerjenleri</code> tablosu eklenmiş; <code>sp_rezervasyon_yap</code> güncellenmiştir.
+    </p>
+    <pre><code># 1. Replikada yeni sütunun doğrulanması
+docker exec yemekhane-mysql-replica mysql -uroot -prootpass -e "SHOW COLUMNS FROM yemekhane_db.rezervasyonlar LIKE 'porsiyon';"
+# Çıktı: porsiyon | enum('tam','yarim') | NO | | tam
+
+# 2. Kahvaltıda yarım porsiyon reddi
+POST /api/reservations {"menu_id": 49, "porsiyon": "yarim"}
+# HTTP 400: {"detail": "Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır."}
+
+# 3. Öğle menüsünde yarım porsiyon (%60 ücret: 45.00 TL -> 27.00 TL)
+POST /api/reservations {"menu_id": 50, "porsiyon": "yarim"}
+# HTTP 200: {"message": "Rezervasyonunuz başarıyla oluşturuldu.", "rezervasyon_id": 366, "guncel_bakiye": 163.0}
+
+# 4. Eski Redis menü kayıtlarının temizlenmesi
+docker exec yemekhane-redis redis-cli flushdb</code></pre>
+
+    <div class="page-break"></div>
+
+    <h2 class="section-title">5. Uygulama Ekran Görüntüleri (Masaüstü ve ~400 px Mobil)</h2>
+    <p>
+      Arayüzün ekranları ve telefon görünümü (~400 px genişlik) canlı ortamda doğrulanmıştır:
+    </p>
+
+    <div class="screenshot-grid">
+      <div class="screenshot-card">
+        <img src="ekran_goruntuleri/01_giris.png" alt="Giriş Ekranı">
+        <div class="screenshot-caption">1. Giriş Ekranı (Kimlik Doğrulama)</div>
+      </div>
+      <div class="screenshot-card">
+        <img src="ekran_goruntuleri/02_gunun_menusu.png" alt="Günün Menüsü">
+        <div class="screenshot-caption">2. Günün Menüsü (Redis Önbellek &amp; Porsiyon Seçimi)</div>
+      </div>
+      <div class="screenshot-card">
+        <img src="ekran_goruntuleri/03_alerjenler.png" alt="Alerjen Tercihleri">
+        <div class="screenshot-caption">3. Kişisel Alerjen Tercihleri (Aşama 4)</div>
+      </div>
+      <div class="screenshot-card">
+        <img src="ekran_goruntuleri/04_bakiye.png" alt="Bakiye Yönetimi">
+        <div class="screenshot-caption">4. Bakiye Yönetimi ve Hareket Geçmişi</div>
+      </div>
     </div>
 
-  </div>
+    <div class="screenshot-card mobile" style="max-width: 340px; margin: 16px auto;">
+      <img src="ekran_goruntuleri/05_mobil_400px.png" alt="400px Mobil Görünüm">
+      <div class="screenshot-caption">5. Telefon Görünümü (~400 px Genişlikte Duyarlı Tasarım)</div>
+    </div>
 
+    <h2 class="section-title">6. Git Commit Geçmişi ve Etiketler</h2>
+    <p>Geliştirme süreci 3 haftalık zaman dilimine yayılmış ve her aşama kendi etiketiyle işaretlenmiştir:</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Commit</th>
+          <th>Tarih</th>
+          <th>Etiket</th>
+          <th>Açıklama</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><code>dc7d599</code></td><td>2026-10-22</td><td><code>asama-1</code></td><td>Docker Compose altyapısı, şema, örnek veri ve GTID replikasyon</td></tr>
+        <tr><td><code>70469dc</code></td><td>2026-10-26</td><td><code>asama-2</code></td><td>FastAPI katmanlı mimari, SP entegrasyonu ve 7 duyarlı ekran</td></tr>
+        <tr><td><code>a41bec1</code></td><td>2026-10-31</td><td><code>asama-3</code></td><td>Redis menü önbelleği, oturum yönetimi ve cache invalidation</td></tr>
+        <tr><td><code>04763d6</code></td><td>2026-11-04</td><td><code>asama-4</code></td><td>Migration: yarım porsiyon (%60) ve kullanıcı alerjen uyarısı</td></tr>
+      </tbody>
+    </table>
+  </div>
 </body>
 </html>
-
