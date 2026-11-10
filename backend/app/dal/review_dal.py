@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 import pymysql
-from app.db import get_primary_connection, get_replica_connection, handle_mysql_error
+from app.db import get_primary_connection, get_replica_connection, handle_mysql_error, mark_primary_write
 
 
 class ReviewDAL:
@@ -34,6 +34,7 @@ class ReviewDAL:
                     )
                     review_id = cursor.lastrowid
                 conn.commit()
+                mark_primary_write(conn)
                 return review_id
             except pymysql.MySQLError as e:
                 conn.rollback()
@@ -54,7 +55,7 @@ class ReviewDAL:
                     FROM degerlendirmeler d
                     JOIN kullanicilar k ON d.kullanici_id = k.id
                     WHERE d.menu_id = %s
-                    ORDER BY d.tarih DESC;
+                    ORDER BY d.tarih DESC, d.id DESC;
                     """,
                     (menu_id,),
                 )

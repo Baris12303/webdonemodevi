@@ -2,6 +2,7 @@ from typing import Optional, Dict, Any, List
 from datetime import date, timedelta
 from app.config import today_tr
 from app.dal.menu_dal import MenuDAL
+from app.db import is_replica_synced
 from app.redis_client import get_cached_menu, set_cached_menu
 
 
@@ -20,7 +21,8 @@ class MenuService:
         menu = MenuDAL.get_menu_detail(yemekhane_id, tarih, ogun_id)
         if menu:
             menu["kaynak"] = "database"
-            set_cached_menu(yemekhane_id, tarih_str, ogun_id, menu)
+            if is_replica_synced():
+                set_cached_menu(yemekhane_id, tarih_str, ogun_id, menu)
             return menu
 
         return None

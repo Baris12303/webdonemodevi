@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 import pymysql
-from app.db import get_primary_connection, get_replica_connection, handle_mysql_error
+from app.db import get_primary_connection, get_replica_connection, handle_mysql_error, mark_primary_write
 
 
 class ReservationDAL:
@@ -24,6 +24,7 @@ class ReservationDAL:
                     guncel_bakiye = float(user_row["bakiye"]) if user_row else 0.0
 
                 conn.commit()
+                mark_primary_write(conn)
                 return {
                     "rezervasyon_id": rez_id,
                     "guncel_bakiye": guncel_bakiye,
@@ -62,6 +63,7 @@ class ReservationDAL:
                     user_row = cursor.fetchone()
                     guncel_bakiye = float(user_row["bakiye"]) if user_row else 0.0
                 conn.commit()
+                mark_primary_write(conn)
                 return guncel_bakiye
             except pymysql.MySQLError as e:
                 conn.rollback()
@@ -98,7 +100,7 @@ class ReservationDAL:
                 JOIN ogunler og ON m.ogun_id = og.id
                 LEFT JOIN v_menu_detay d ON m.id = d.menu_id
                 WHERE r.kullanici_id = %s
-                ORDER BY r.olusturulma_tarihi DESC;
+                ORDER BY r.olusturulma_tarihi DESC, r.id DESC;
                 """
                 cursor.execute(query, (kullanici_id,))
                 rows = cursor.fetchall()

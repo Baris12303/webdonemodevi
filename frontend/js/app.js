@@ -487,9 +487,6 @@ async function handleBookReservation(menuId, porsiyon = "tam", source = null) {
     document.getElementById("user-balance").textContent = `${Number(res.guncel_bakiye).toFixed(2)} TL`;
     if (currentUser) currentUser.bakiye = res.guncel_bakiye;
 
-    // Asenkron replika gecikmesi nedeniyle bayat kontenjan bilgisinin önbelleğe yazılmasını önle
-    await sleep(150);
-
     const isWeeklyActive = source === "weekly" || document.getElementById("screen-weekly")?.classList.contains("active");
     const isTodayActive = source === "daily" || document.getElementById("screen-today")?.classList.contains("active");
     if (isWeeklyActive) {
@@ -617,7 +614,6 @@ async function handleTopUp(amount) {
   try {
     const res = await apiRequest("/balance/topup", "POST", { miktar: amount });
     showToast(res.message, "success");
-    await sleep(150);
     await loadBalanceAndHistory();
   } catch (err) {}
 }
@@ -625,6 +621,10 @@ async function handleTopUp(amount) {
 // Değerlendirme İşlemleri
 function openReviewModal(menuId) {
   document.getElementById("review-menu-id").value = menuId;
+  const ratingEl = document.getElementById("review-rating");
+  if (ratingEl) ratingEl.value = "5";
+  const commentEl = document.getElementById("review-comment");
+  if (commentEl) commentEl.value = "";
   showScreen("screen-review");
   loadMenuReviews(menuId);
 }
@@ -948,7 +948,6 @@ async function handleUpdateMenu(e) {
     });
     showToast(res.message, "success");
     cancelEditMenu();
-    await sleep(150);
     await loadAdminStats();
   } catch (err) {}
 }

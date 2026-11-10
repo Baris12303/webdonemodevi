@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 import pymysql
-from app.db import get_primary_connection, get_replica_connection, handle_mysql_error
+from app.db import get_primary_connection, get_replica_connection, handle_mysql_error, mark_primary_write
 
 
 class BalanceDAL:
@@ -15,6 +15,7 @@ class BalanceDAL:
                     row = cursor.fetchone()
                     guncel_bakiye = float(row["bakiye"]) if row else 0.0
                 conn.commit()
+                mark_primary_write(conn)
                 return guncel_bakiye
             except pymysql.MySQLError as e:
                 conn.rollback()
@@ -33,7 +34,7 @@ class BalanceDAL:
                     SELECT id, miktar, hareket_tipi, aciklama, tarih, rezervasyon_id
                     FROM bakiye_hareketleri
                     WHERE kullanici_id = %s
-                    ORDER BY tarih DESC;
+                    ORDER BY tarih DESC, id DESC;
                     """,
                     (kullanici_id,),
                 )

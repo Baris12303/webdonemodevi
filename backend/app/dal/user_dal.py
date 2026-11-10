@@ -1,6 +1,6 @@
 from typing import Optional, Dict, Any
 import pymysql
-from app.db import get_replica_connection, get_primary_connection, handle_mysql_error
+from app.db import get_replica_connection, get_primary_connection, handle_mysql_error, mark_primary_write
 
 
 class UserDAL:
@@ -62,6 +62,7 @@ class UserDAL:
                             (user_id, a_id),
                         )
                 conn.commit()
+                mark_primary_write(conn)
                 return True
             except pymysql.MySQLError as e:
                 conn.rollback()

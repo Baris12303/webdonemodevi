@@ -1,7 +1,7 @@
 from typing import List, Dict, Any, Optional
 from datetime import date
 import pymysql
-from app.db import get_replica_connection, get_primary_connection, handle_mysql_error
+from app.db import get_replica_connection, get_primary_connection, handle_mysql_error, mark_primary_write
 
 
 class MenuDAL:
@@ -199,6 +199,7 @@ class MenuDAL:
                             (menu_id, y_id),
                         )
                 conn.commit()
+                mark_primary_write(conn)
                 return menu_id
             except pymysql.MySQLError as e:
                 conn.rollback()
@@ -236,6 +237,7 @@ class MenuDAL:
                                 (menu_id, y_id),
                             )
                 conn.commit()
+                mark_primary_write(conn)
                 return info
             except pymysql.MySQLError as e:
                 conn.rollback()

@@ -1,12 +1,65 @@
 import queue
 import logging
 import threading
+import time
 from contextlib import contextmanager
 import pymysql
 import pymysql.cursors
 from app.config import settings
 
 logger = logging.getLogger("db")
+
+_gtid_lock = threading.Lock()
+_last_write_gtid: str = ""
+_last_write_ts: float = 0.0
+_tls = threading.local()
+
+
+def mark_primary_write(conn) -> None:
+    """Son primary yazma işleminin GTID kümesini kaydeder."""
+    global _last_write_gtid, _last_write_ts
+    try:
+        with _gtid_lock:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT @@GLOBAL.GTID_EXECUTED AS gtid;")
+                row = cursor.fetchone()
+            gtid = (row or {}).get("gtid") if isinstance(row, dict) else None
+            if gtid:
+                _last_write_gtid = str(gtid).strip()
+                _last_write_ts = time.monotonic()
+    except Exception as e:
+        logger.warning("Failed to record primary GTID: %s", e)
+
+
+def _sync_replica_to_last_write(conn) -> bool:
+    """Replika bağlantısının son yazma GTID'sine yetişmesini bekler."""
+    global _last_write_gtid
+    with _gtid_lock:
+        target_gtid = _last_write_gtid
+        write_ts = _last_write_ts
+
+    if not target_gtid or (time.monotonic() - write_ts) > 10.0:
+        return True
+
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT WAIT_FOR_EXECUTED_GTID_SET(%s, 2) AS timed_out;", (target_gtid,))
+            row = cursor.fetchone()
+        timed_out = int((row or {}).get("timed_out", 0)) if isinstance(row, dict) else 0
+        if timed_out == 0:
+            with _gtid_lock:
+                if _last_write_gtid == target_gtid:
+                    _last_write_gtid = ""
+            return True
+        logger.warning("Replica did not catch up to GTID %s within 2s", target_gtid)
+        return False
+    except Exception as e:
+        logger.warning("Replica GTID sync check failed: %s", e)
+        return False
+
+
+def is_replica_synced() -> bool:
+    return getattr(_tls, "last_replica_synced", True)
 
 
 def handle_mysql_error(e: pymysql.MySQLError, context: str):
@@ -143,6 +196,7 @@ def get_replica_connection():
     """Okuma işlemleri ve View sorguları için İkincil (Salt Okunur) Veritabanı"""
     conn = replica_pool.get_connection()
     try:
+        _tls.last_replica_synced = _sync_replica_to_last_write(conn)
         yield conn
     finally:
         replica_pool.release_connection(conn)
