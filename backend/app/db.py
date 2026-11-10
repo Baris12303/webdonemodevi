@@ -45,6 +45,7 @@ def _sync_replica_to_last_write(conn) -> bool:
         with conn.cursor() as cursor:
             cursor.execute("SELECT WAIT_FOR_EXECUTED_GTID_SET(%s, 2) AS timed_out;", (target_gtid,))
             row = cursor.fetchone()
+        conn.rollback()
         timed_out = int((row or {}).get("timed_out", 0)) if isinstance(row, dict) else 0
         if timed_out == 0:
             with _gtid_lock:
@@ -54,6 +55,10 @@ def _sync_replica_to_last_write(conn) -> bool:
         logger.warning("Replica did not catch up to GTID %s within 2s", target_gtid)
         return False
     except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         logger.warning("Replica GTID sync check failed: %s", e)
         return False
 
@@ -192,11 +197,11 @@ def get_primary_connection():
 
 
 @contextmanager
-def get_replica_connection():
+def get_replica_connection(wait_sync: bool = True):
     """Okuma işlemleri ve View sorguları için İkincil (Salt Okunur) Veritabanı"""
     conn = replica_pool.get_connection()
     try:
-        _tls.last_replica_synced = _sync_replica_to_last_write(conn)
+        _tls.last_replica_synced = _sync_replica_to_last_write(conn) if wait_sync else True
         yield conn
     finally:
         replica_pool.release_connection(conn)

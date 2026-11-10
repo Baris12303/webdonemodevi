@@ -306,6 +306,7 @@ with get_primary_connection() as conn:
         cursor.execute("SELECT bakiye FROM kullanicilar WHERE id = %s;", (kullanici_id,))
         user_row = cursor.fetchone()
     conn.commit()
+    mark_primary_write(conn)
 # 4. Yanıt: HTTP 200 JSON (veya SP SQLSTATE 45000 fırlatırsa HTTP 400 {"detail": "Bakiye yetersiz."})</code></pre>
 
     <h3>2.2. Replikasyon Gecikmesi (Replication Lag) Açıklaması</h3>

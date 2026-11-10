@@ -72,7 +72,7 @@ def health_check():
         primary_status = "error"
 
     try:
-        with get_replica_connection() as conn:
+        with get_replica_connection(wait_sync=False) as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT 1;")
     except Exception as e:

@@ -33,6 +33,7 @@ with get_primary_connection() as conn:
         cursor.execute("SELECT bakiye FROM kullanicilar WHERE id = %s;", (kullanici_id,))
         user_row = cursor.fetchone()
     conn.commit()
+    mark_primary_write(conn)
 ```
 4. **Yanıt:** `sp_rezervasyon_yap` prosedürü kural hatasında `SQLSTATE '45000'` döndürür; `handle_mysql_error` bunu `ValueError` yapar, service HTTP `400` JSON yanıtı döner ve arayüz mesajı kullanıcıya gösterir.
 
@@ -44,21 +45,21 @@ Listeleme ve menü sorguları `get_replica_connection()` üzerinden replika sunu
 
 - `docker compose ps` çıktısında `frontend`, `uygulama`, `mysql-primary`, `mysql-replica`, `redis` servisleri `healthy`, `replica-setup` ise `Exited (0)` durumundadır.
 - `SHOW REPLICA STATUS\G` çıktısında `Replica_IO_Running: Yes`, `Replica_SQL_Running: Yes`, `Seconds_Behind_Source: 0`, `Auto_Position: 1` olarak doğrulandı.
-- Primary üzerinde `CALL sp_bakiye_yukle(6, 100.00)` çağrıldıktan sonra replikada bakiyenin güncellendiği görüldü.
-- Replikaya yazma denemesi `--super-read-only` nedeniyle `ERROR 1290 (HY000)` ile reddedildi.
-- `docker stop yemekhane-mysql-replica` ardından primary'de işlem yapılıp replika tekrar başlatıldığında GTID ile aradaki farkı otomatik yakaladı.
+- Primary üzerinde `CALL sp_bakiye_yukle(6, 100.00)` çağrıldıktan sonra replikada `SELECT id, ad, bakiye FROM kullanicilar WHERE id = 6;` ile `290.00` görüldü.
+- Replikaya yazma denemesi (`UPDATE kullanicilar SET bakiye = 9999 WHERE id = 6;`) `--super-read-only` nedeniyle `ERROR 1290 (HY000)` ile reddedildi.
+- `docker stop yemekhane-mysql-replica` ardından primary'de `CALL sp_bakiye_yukle(6, 50.00)` çalıştırılıp `docker start yemekhane-mysql-replica` yapıldığında replika GTID ile aradaki farkı otomatik yakaladı (`340.00`).
 
 ## 3. Aşama 3: Redis Önbellek ve Oturum Yönetimi
 
-- **Menü önbelleği (`menu:{yemekhane_id}:{tarih}:{ogun_id}`):** Gün sonuna (`23:59:59`) kadar TTL ile saklanır. İlk istekte `[CACHE MISS]` / `[CACHE SET]`, sonraki isteklerde `[CACHE HIT]` logu oluşur. Menü güncellendiğinde (ve rezervasyon/değerlendirmede) anahtar silinir (`EXISTS` -> `0`).
-- **Oturum (`oturum:{token}`):** 30 dakika TTL ile tutulur ve her istekte yenilenir. `docker restart yemekhane-uygulama` sonrasında oturum düşmez; `/api/auth/logout` ile silinir.
+- **Menü önbelleği (`menu:{yemekhane_id}:{tarih}:{ogun_id}`):** Gün sonuna (`23:59:59`) kadar TTL ile saklanır. İlk istekte `[CACHE MISS]` / `[CACHE SET]`, sonraki isteklerde `[CACHE HIT]` logu oluşur (`redis-cli ttl "menu:1:2026-10-27:2"` -> `19148`). Menü güncellendiğinde (ve rezervasyon/değerlendirmede) anahtar silinir (`redis-cli exists ...` -> `0`).
+- **Oturum (`oturum:{token}`):** 30 dakika TTL ile tutulur ve her istekte yenilenir. `docker restart yemekhane-uygulama` sonrasında `GET /api/auth/me` `200 OK` döner; `/api/auth/logout` ile anahtar silinir (`exists` -> `0`).
 
 ## 4. Aşama 4: Değişiklik Talebi (`04_degisiklik.sql`)
 
-- `rezervasyonlar` tablosuna `porsiyon ENUM('tam', 'yarim') NOT NULL DEFAULT 'tam'` sütunu eklendi ve `kullanici_alerjenleri` tablosu oluşturuldu. Replikadan `SHOW CREATE TABLE` çıktısıyla geçiş doğrulandı.
-- Kahvaltıda yarım porsiyon talebi `sp_rezervasyon_yap` tarafından reddedilir (`Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.`). Öğle/akşam menülerinde ücret `%60` hesaplanır (`45.00 TL -> 27.00 TL`).
+- `rezervasyonlar` tablosuna `porsiyon ENUM('tam', 'yarim') NOT NULL DEFAULT 'tam'` sütunu eklendi ve `kullanici_alerjenleri` tablosu oluşturuldu. Replikadan `SHOW CREATE TABLE rezervasyonlar\G` ve `SHOW CREATE TABLE kullanici_alerjenleri\G` çıktılarıyla geçiş doğrulandı.
+- Kahvaltıda yarım porsiyon talebi `sp_rezervasyon_yap` tarafından reddedilir (`HTTP 400`, `Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.`). Öğle/akşam menülerinde ücret `%60` hesaplanır (`45.00 TL -> 27.00 TL`).
 - Kullanıcı alerjenlerini profilinden seçer; menüde eşleşen yemekler kırmızı uyarı ile gösterilir.
-- Eski menü önbellek kayıtları `redis-cli flushdb` ile temizlendi.
+- Eski menü önbellek kayıtları `docker exec yemekhane-redis redis-cli flushdb` ile temizlendi.
 
 ## 5. Ekran Görüntüleri
 

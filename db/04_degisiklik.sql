@@ -66,6 +66,7 @@ proc_label: BEGIN
     DECLARE v_ucret DECIMAL(10,2);
     DECLARE v_tarih DATE;
     DECLARE v_son_saat TIME;
+    DECLARE v_ogun_id INT;
     DECLARE v_ogun_adi VARCHAR(50);
     DECLARE v_kapasite INT;
     DECLARE v_aktif_rezervasyon INT;
@@ -96,8 +97,8 @@ proc_label: BEGIN
     END IF;
 
     -- Menü ve öğün kontrolü (menü satırını kilitle)
-    SELECT m.tarih, og.son_saat, og.ad, m.ogrenci_fiyati, m.personel_fiyati, yh.kapasite
-    INTO v_tarih, v_son_saat, v_ogun_adi, v_ogrenci_fiyati, v_personel_fiyati, v_kapasite
+    SELECT m.tarih, og.son_saat, m.ogun_id, og.ad, m.ogrenci_fiyati, m.personel_fiyati, yh.kapasite
+    INTO v_tarih, v_son_saat, v_ogun_id, v_ogun_adi, v_ogrenci_fiyati, v_personel_fiyati, v_kapasite
     FROM menuler m
     JOIN ogunler og ON m.ogun_id = og.id
     JOIN yemekhaneler yh ON m.yemekhane_id = yh.id
@@ -116,7 +117,7 @@ proc_label: BEGIN
     END IF;
 
     -- Kahvaltıda yarım porsiyon geçerli değildir
-    IF p_porsiyon = 'yarim' AND v_ogun_adi = 'Kahvaltı' THEN
+    IF p_porsiyon = 'yarim' AND (v_ogun_id = 1 OR v_ogun_adi = 'Kahvaltı') THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.';
     END IF;
