@@ -474,6 +474,10 @@ async function handleBookReservationFromWeekly(menuId, allowHalf = true) {
   await handleBookReservation(menuId, portion, "weekly");
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 // Rezervasyon oluşturma
 async function handleBookReservation(menuId, porsiyon = "tam", source = null) {
   try {
@@ -482,6 +486,9 @@ async function handleBookReservation(menuId, porsiyon = "tam", source = null) {
     // Rezervasyon sonrası güncel bakiyeyi header'a yaz
     document.getElementById("user-balance").textContent = `${Number(res.guncel_bakiye).toFixed(2)} TL`;
     if (currentUser) currentUser.bakiye = res.guncel_bakiye;
+
+    // Asenkron replika gecikmesi nedeniyle bayat kontenjan bilgisinin önbelleğe yazılmasını önle
+    await sleep(150);
 
     const isWeeklyActive = source === "weekly" || document.getElementById("screen-weekly")?.classList.contains("active");
     const isTodayActive = source === "daily" || document.getElementById("screen-today")?.classList.contains("active");
@@ -496,12 +503,20 @@ async function handleBookReservation(menuId, porsiyon = "tam", source = null) {
 }
 
 // Rezervasyonlarım
-async function loadMyReservations() {
+async function loadMyReservations(expectedCancelledId = null) {
   const container = document.getElementById("reservations-list");
   container.innerHTML = "<p>Rezervasyonlarınız yükleniyor...</p>";
 
   try {
-    const rezs = await apiRequest("/reservations");
+    let rezs = await apiRequest("/reservations");
+    if (expectedCancelledId) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const target = rezs.find(r => Number(r.id) === Number(expectedCancelledId));
+        if (!target || target.durum !== "aktif") break;
+        await sleep(200);
+        rezs = await apiRequest("/reservations");
+      }
+    }
     if (rezs.length === 0) {
       container.innerHTML = "<p>Henüz bir rezervasyonunuz bulunmuyor.</p>";
       return;
@@ -559,7 +574,7 @@ async function handleCancelReservation(rezId) {
     showToast(res.message, "success");
     document.getElementById("user-balance").textContent = `${Number(res.guncel_bakiye).toFixed(2)} TL`;
     if (currentUser) currentUser.bakiye = res.guncel_bakiye;
-    await loadMyReservations();
+    await loadMyReservations(rezId);
   } catch (err) {}
 }
 
@@ -602,6 +617,7 @@ async function handleTopUp(amount) {
   try {
     const res = await apiRequest("/balance/topup", "POST", { miktar: amount });
     showToast(res.message, "success");
+    await sleep(150);
     await loadBalanceAndHistory();
   } catch (err) {}
 }
@@ -613,11 +629,18 @@ function openReviewModal(menuId) {
   loadMenuReviews(menuId);
 }
 
-async function loadMenuReviews(menuId) {
+async function loadMenuReviews(menuId, expectedReviewId = null) {
   const container = document.getElementById("menu-reviews-list");
   container.innerHTML = "<p>Değerlendirmeler yükleniyor...</p>";
   try {
-    const revs = await apiRequest(`/reviews/${menuId}`);
+    let revs = await apiRequest(`/reviews/${menuId}`);
+    if (expectedReviewId) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (revs.some(r => Number(r.id) === Number(expectedReviewId))) break;
+        await sleep(200);
+        revs = await apiRequest(`/reviews/${menuId}`);
+      }
+    }
     if (revs.length === 0) {
       container.innerHTML = "<p>Bu menüye henüz değerlendirme yapılmamış.</p>";
       return;
@@ -651,7 +674,7 @@ async function handleSendReview(e) {
     const res = await apiRequest("/reviews", "POST", { menu_id: menuId, puan, yorum });
     showToast(res.message, "success");
     document.getElementById("review-comment").value = "";
-    await loadMenuReviews(menuId);
+    await loadMenuReviews(menuId, res.degerlendirme_id);
   } catch (err) {}
 }
 
@@ -747,12 +770,19 @@ async function loadAdminDashboard() {
   await Promise.all([loadDishesForAdmin(), loadAdminStats()]);
 }
 
-async function loadAdminStats() {
+async function loadAdminStats(expectedMenuId = null) {
   const container = document.getElementById("admin-stats-table");
   container.innerHTML = "<p>İstatistikler yükleniyor...</p>";
 
   try {
-    const stats = await apiRequest("/admin/stats");
+    let stats = await apiRequest("/admin/stats");
+    if (expectedMenuId && Array.isArray(stats)) {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (stats.some(s => Number(s.menu_id) === Number(expectedMenuId))) break;
+        await sleep(200);
+        stats = await apiRequest("/admin/stats");
+      }
+    }
     adminStatsById = {};
     if (!Array.isArray(stats) || stats.length === 0) {
       container.innerHTML = "<p>Henüz menü istatistiği bulunmuyor.</p>";
@@ -857,7 +887,7 @@ async function openEditMenu(menuId) {
     document.getElementById("admin-edit-menu-id").value = String(resolvedId);
     document.getElementById("admin-edit-title").textContent = `Menü Düzenle (#${resolvedId})`;
     document.getElementById("admin-edit-meta").textContent =
-      `${menu.yemekhane_adi} • ${menu.tarih} • ${menu.ogun_adi} • Kapasite: ${menu.yemekhane_kapasitesi} kişi (salt okunur)`;
+      `${menu.yemekhane_adi} • ${menu.tarih} • ${menu.ogun_adi} • Kapasite: ${menu.yemekhane_kapasitesi} kişi`;
     document.getElementById("admin-edit-price-student").value = menu.ogrenci_fiyati;
     document.getElementById("admin-edit-price-staff").value = menu.personel_fiyati;
 
@@ -918,6 +948,7 @@ async function handleUpdateMenu(e) {
     });
     showToast(res.message, "success");
     cancelEditMenu();
+    await sleep(150);
     await loadAdminStats();
   } catch (err) {}
 }
@@ -959,7 +990,7 @@ async function handleCreateMenu(e) {
     Array.from(document.getElementById("admin-dishes-select").options).forEach(opt => {
       opt.selected = false;
     });
-    await loadAdminStats();
+    await loadAdminStats(res.menu_id);
   } catch (err) {}
 }
 

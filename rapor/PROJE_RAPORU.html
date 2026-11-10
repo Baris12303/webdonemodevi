@@ -137,6 +137,10 @@
       border-radius: 3px;
     }
 
+    td:first-child code {
+      white-space: nowrap;
+    }
+
     pre {
       background: #f8fafc;
       color: #0f172a;
@@ -276,7 +280,6 @@ $ docker exec yemekhane-mysql-replica mysql -u root -prootpass yemekhane_db -e "
 id  ad      bakiye
 6   Caner   340.00</code></pre>
 
-    <div class="page-break"></div>
 
     <h2 class="section-title">2. Aşama 2: Katmanlı Mimari, Stored Procedure ve Arayüz</h2>
     <p>
@@ -357,7 +360,6 @@ $ docker exec yemekhane-redis redis-cli keys "oturum:*"
 $ docker exec yemekhane-redis redis-cli exists "oturum:f06f37822b904fc685c163cf9714b19e"
 (integer) 0</code></pre>
 
-    <div class="page-break"></div>
 
     <h2 class="section-title">4. Aşama 4: Değişiklik Talebi (<code>04_degisiklik.sql</code>)</h2>
     <p>
