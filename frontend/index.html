@@ -15,10 +15,9 @@
   <header>
     <div class="header-container">
       <div class="logo-area">
-        <span style="font-size: 1.5rem;">🍽️</span>
         <div>
           <h1>Kampüs Yemekhane</h1>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">Otomasyon Sistemi</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Yemekhane Otomasyonu</span>
         </div>
       </div>
 
@@ -39,8 +38,8 @@
       <button type="button" class="nav-tab" data-screen="screen-weekly" onclick="showScreen('screen-weekly')">Haftalık Menü</button>
       <button type="button" class="nav-tab" data-screen="screen-reservations" onclick="showScreen('screen-reservations')">Rezervasyonlarım</button>
       <button type="button" class="nav-tab" data-screen="screen-balance" onclick="showScreen('screen-balance')">Bakiye</button>
-      <button type="button" class="nav-tab" data-screen="screen-allergens" onclick="showScreen('screen-allergens')">⚠️ Alerjenlerim</button>
-      <button type="button" class="nav-tab" id="tab-admin" data-screen="screen-admin" style="display: none;" onclick="showScreen('screen-admin')">⚙️ Yönetici Paneli</button>
+      <button type="button" class="nav-tab" data-screen="screen-allergens" onclick="showScreen('screen-allergens')">Alerjenlerim</button>
+      <button type="button" class="nav-tab" id="tab-admin" data-screen="screen-admin" style="display: none;" onclick="showScreen('screen-admin')">Yönetici Paneli</button>
     </div>
   </nav>
 
@@ -162,18 +161,18 @@
         <form onsubmit="handleSendReview(event)">
           <input type="hidden" id="review-menu-id">
           <div class="form-group">
-            <label for="review-rating">Puanınız (1 - 5 Yıldız)</label>
+            <label for="review-rating">Puanınız (1 - 5)</label>
             <select id="review-rating">
-              <option value="5">⭐⭐⭐⭐⭐ 5 - Mükemmel</option>
-              <option value="4">⭐⭐⭐⭐ 4 - Çok İyi</option>
-              <option value="3">⭐⭐⭐ 3 - Orta</option>
-              <option value="2">⭐⭐ 2 - Geliştirilmeli</option>
-              <option value="1">⭐ 1 - Kötü</option>
+              <option value="5">5 - Çok İyi</option>
+              <option value="4">4 - İyi</option>
+              <option value="3">3 - Orta</option>
+              <option value="2">2 - Kötü</option>
+              <option value="1">1 - Çok Kötü</option>
             </select>
           </div>
           <div class="form-group">
             <label for="review-comment">Yorumunuz (İsteğe bağlı)</label>
-            <textarea id="review-comment" rows="3" placeholder="Yemekler nasıldı, lezzet ve porsiyon nasıldı?"></textarea>
+            <textarea id="review-comment" rows="3" placeholder="Yemekler hakkındaki görüşünüz..."></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Değerlendirmeyi Gönder</button>
           <button type="button" class="btn btn-sm" style="background: transparent; color: var(--text-muted); margin-top: 8px;" onclick="showScreen('screen-reservations')">İptal / Geri Dön</button>
@@ -189,9 +188,9 @@
     <!-- Alerjen Tercihleri -->
     <section id="screen-allergens" class="screen">
       <div class="card" style="max-width: 600px; margin: 0 auto;">
-        <div class="card-title">⚠️ Kişisel Alerjen Tercihlerim</div>
+        <div class="card-title">Alerjen Tercihlerim</div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">
-          Hassasiyetiniz olan alerjenleri seçin. Menüde bu maddeleri içeren yemekler olduğunda sistem sizi otomatik olarak uyaracaktır.
+          Hassasiyetiniz olan alerjenleri seçebilirsiniz. Seçili alerjenleri içeren yemekler menüde uyarı ile gösterilir.
         </p>
         <div id="allergens-checkbox-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px;">
           <!-- Dinamik Checkbox Listesi -->

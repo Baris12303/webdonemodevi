@@ -36,4 +36,4 @@ class ReservationOut(BaseModel):
 class ReservationCreateResponse(BaseModel):
     message: str
     rezervasyon_id: int
-    guncel_bakiye: float  # Doğrudan Primary'den okunan anlık bakiye!
+    guncel_bakiye: float  # Primary veritabanından okunan güncel bakiye

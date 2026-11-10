@@ -1,59 +1,66 @@
-# Kampüs Yemekhane Otomasyon Sistemi — Proje Raporu
+# Kampüs Yemekhane Otomasyonu - Proje Raporu
 
-* **Ders:** Web Teknolojileri
-* **Öğretim Üyesi:** Burak Yılmaz
-* **Mimari Seçimi:** **Seçenek B — Web API + Ayrı İstemci** (FastAPI REST API + Saf HTML5/CSS3/Vanilla JS)
-* **Altyapı:** Docker Compose (6 Servis: `mysql-primary`, `mysql-replica`, `replica-setup`, `redis`, `uygulama`, `frontend`)
+- **Ders:** Web Teknolojileri
+- **Öğretim Üyesi:** Burak Yılmaz
+- **Mimari Seçimi:** Seçenek B - Web API + Arayüz (FastAPI + HTML5 / CSS3 / Vanilla JS)
+- **Altyapı:** Docker Compose (6 container: `mysql-primary`, `mysql-replica`, `replica-setup`, `redis`, `uygulama`, `frontend`)
 
----
+## 1. Mimari Seçimi ve İstek Akışı
 
-## 1. Mimari Seçim ve İstek Akışı
+Projede **Web API + Arayüz** yolu seçilmiştir. Sunucu tarafında Python FastAPI ile yalnızca JSON döndüren katmanlı bir REST API yazılmış; istemci tarafında ise React gibi bir çerçeve kullanılmadan HTML5, CSS3 ve Vanilla JS (`fetch`) ile masaüstü ve ~400 px mobil ekranlara uyumlu 7 ekranlık arayüz geliştirilmiştir. Apache 2.4 (`:8080`) statik dosyaları sunar ve `/api/` isteklerini iç ağdaki `uygulama:8000` servisine yönlendirir.
 
-Bu projede **Seçenek B (Web API + Ayrı İstemci)** yaklaşımı seçilmiştir. Sunucu tarafında Python FastAPI ile JSON tabanlı REST API geliştirilmiş; istemci tarafında ise React/Vue gibi çerçeveler kullanılmadan saf HTML5, CSS3 ve Vanilla JS (`fetch`) ile masaüstü ve ~400 px telefon ekranlarına duyarlı arayüz hazırlanmıştır. Tüm HTTP istekleri Apache 2.4 ters vekili (`:8080`) üzerinden karşılanır; `/api/*` istekleri iç ağdaki `uygulama:8000` servisine yönlendirilir.
+### Bir İsteğin Uygulama İçindeki Yolu (`POST /api/reservations`)
 
-### Bir İsteğin Uygulama İçindeki Yolu (Örnek: `POST /api/reservations`)
-1. **İstemci & Reverse Proxy:** Kullanıcı arayüzde porsiyon seçip rezervasyon butonuna bastığında `app.js`, Bearer token ile `POST /api/reservations` isteği atar; Apache isteği `uygulama:8000` servisine iletir.
-2. **Router (`app/routers/reservations.py`):** `get_current_user` Redis üzerinden oturumu doğrular, istek gövdesi `ReservationCreateRequest` ile doğrulanır ve `ReservationService.create_reservation(...)` çağrılır.
-3. **Service (`app/services/reservation_service.py`):** `ReservationDAL.make_reservation(...)` çağrısını yürütür; Stored Procedure tarafından fırlatılan `SQLSTATE 45000` hatalarını yakalayıp HTTP `400 Bad Request` yanıtına dönüştürür.
-4. **DAL & Veritabanı (`app/dal/reservation_dal.py`):** `get_primary_connection()` ile **Primary** veritabanına bağlanıp `CALL sp_rezervasyon_yap(kullanici_id, menu_id, porsiyon)` prosedürünü çalıştırır.
+1. **Route (`backend/app/routers/reservations.py`):**
+```python
+@router.post("", response_model=ReservationCreateResponse, summary="Rezervasyon Yap")
+def create_reservation(req: ReservationCreateRequest, user: dict = Depends(get_current_user)):
+    return ReservationService.create_reservation(user["id"], req.menu_id, req.porsiyon)
+```
+2. **Service (`backend/app/services/reservation_service.py`):**
+```python
+result = ReservationDAL.make_reservation(kullanici_id, menu_id, porsiyon)
+coords = MenuDAL.get_menu_cache_coords(menu_id)
+if coords:
+    invalidate_menu_cache(coords["yemekhane_id"], str(coords["tarih"]), coords["ogun_id"])
+return {"message": "Rezervasyonunuz başarıyla oluşturuldu.", "rezervasyon_id": result["rezervasyon_id"], "guncel_bakiye": result["guncel_bakiye"]}
+```
+3. **Veri Katmanı / DAL (`backend/app/dal/reservation_dal.py`):**
+```python
+with get_primary_connection() as conn:
+    with conn.cursor() as cursor:
+        cursor.execute("CALL sp_rezervasyon_yap(%s, %s, %s);", (kullanici_id, menu_id, porsiyon))
+        cursor.execute("SELECT bakiye FROM kullanicilar WHERE id = %s;", (kullanici_id,))
+        user_row = cursor.fetchone()
+    conn.commit()
+```
+4. **Yanıt:** `sp_rezervasyon_yap` prosedürü kural hatasında `SQLSTATE '45000'` döndürür; `handle_mysql_error` bunu `ValueError` yapar, service HTTP `400` JSON yanıtı döner ve arayüz mesajı kullanıcıya gösterir.
 
-### Replikasyon Gecikmesi (Replication Lag) Önlemi
-Listeleme ve menü sorguları `get_replica_connection()` üzerinden okuma replikasına gider. Ancak **rezervasyon yapma, rezervasyon iptali ve bakiye yükleme** işlemlerinin hemen ardından ekranda gösterilen güncel bakiye değeri doğrudan **Primary** veritabanından (`get_primary_connection()` / `use_primary=True`) okunur. Böylece asenkron replikasyonda milisaniyelik gecikme (replication lag) yaşansa dahi kullanıcının eski bakiyeyi görmesi engellenir.
+### Replikasyon Gecikmesi (Replication Lag) Açıklaması
 
----
+Listeleme ve menü sorguları `get_replica_connection()` üzerinden replika sunucusuna gönderilir. Ancak rezervasyon yapma, iptal ve bakiye yükleme sonrasında ekranda gösterilen güncel bakiye doğrudan primary sunucudan (`get_primary_connection()` / `use_primary=True`) okunur. MySQL replikasyonu asenkron çalıştığı için primary'de yapılan güncellemenin replikaya geçmesinde kısa bir gecikme yaşanabilir; doğrudan primary'den okuyarak kullanıcının eski bakiyeyi görmesi engellenir.
 
 ## 2. Aşama 1: Altyapı ve GTID Replikasyonu
 
-* **Replika Durumu:** `SHOW REPLICA STATUS\G` çıktısında `Replica_IO_Running: Yes`, `Replica_SQL_Running: Yes`, `Seconds_Behind_Source: 0`.
-* **Salt-Okunur Koruması:** Replika üzerinde `super_read_only = ON` aktiftir; yazma denemesi `ERROR 1290 (HY000)` ile reddedilir.
-* **Catch-Up Testi:** Replika durdurulup Primary'de bakiye yüklemesi yapıldıktan sonra replika tekrar başlatıldığında GTID üzerinden eksik transaction'ları otomatik çekip senkronize olmuştur.
+- `docker compose ps` çıktısında `frontend`, `uygulama`, `mysql-primary`, `mysql-replica`, `redis` servisleri `healthy`, `replica-setup` ise `Exited (0)` durumundadır.
+- `SHOW REPLICA STATUS\G` çıktısında `Replica_IO_Running: Yes`, `Replica_SQL_Running: Yes`, `Seconds_Behind_Source: 0`, `Auto_Position: 1` olarak doğrulandı.
+- Primary üzerinde `CALL sp_bakiye_yukle(6, 100.00)` çağrıldıktan sonra replikada bakiyenin güncellendiği görüldü.
+- Replikaya yazma denemesi `--super-read-only` nedeniyle `ERROR 1290 (HY000)` ile reddedildi.
+- `docker stop yemekhane-mysql-replica` ardından primary'de işlem yapılıp replika tekrar başlatıldığında GTID ile aradaki farkı otomatik yakaladı.
 
----
+## 3. Aşama 3: Redis Önbellek ve Oturum Yönetimi
 
-## 3. Aşama 2: Katmanlı Mimari, Stored Procedure ve Arayüz
+- **Menü önbelleği (`menu:{yemekhane_id}:{tarih}:{ogun_id}`):** Gün sonuna (`23:59:59`) kadar TTL ile saklanır. İlk istekte `[CACHE MISS]` / `[CACHE SET]`, sonraki isteklerde `[CACHE HIT]` logu oluşur. Menü güncellendiğinde (ve rezervasyon/değerlendirmede) anahtar silinir (`EXISTS` -> `0`).
+- **Oturum (`oturum:{token}`):** 30 dakika TTL ile tutulur ve her istekte yenilenir. `docker restart yemekhane-uygulama` sonrasında oturum düşmez; `/api/auth/logout` ile silinir.
 
-* **Stored Procedure'ler:** `sp_rezervasyon_yap`, `sp_rezervasyon_iptal`, `sp_bakiye_yukle`, `sp_turnike_gecis`.
-* **SQLSTATE 45000:** Kural ihlallerinde (yetersiz bakiye, süre aşımı, kapasite doluluğu, mükerrer rezervasyon) SP tarafından fırlatılan Türkçe hata mesajları backend'de yakalanıp arayüzde toast bildirimi olarak gösterilir.
-* **7 Duyarlı Ekran:** Giriş, Günün Menüsü, Haftalık Menü, Rezervasyonlarım, Bakiye, Değerlendirme ve Yönetici Paneli (~400 px mobil uyumlu).
+## 4. Aşama 4: Değişiklik Talebi (`04_degisiklik.sql`)
 
----
+- `rezervasyonlar` tablosuna `porsiyon ENUM('tam', 'yarim') NOT NULL DEFAULT 'tam'` sütunu eklendi ve `kullanici_alerjenleri` tablosu oluşturuldu. Replikadan `SHOW CREATE TABLE` çıktısıyla geçiş doğrulandı.
+- Kahvaltıda yarım porsiyon talebi `sp_rezervasyon_yap` tarafından reddedilir (`Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.`). Öğle/akşam menülerinde ücret `%60` hesaplanır (`45.00 TL -> 27.00 TL`).
+- Kullanıcı alerjenlerini profilinden seçer; menüde eşleşen yemekler kırmızı uyarı ile gösterilir.
+- Eski menü önbellek kayıtları `redis-cli flushdb` ile temizlendi.
 
-## 4. Aşama 3: Redis Önbellek ve Oturum Yönetimi
-
-* **Menü Önbelleği (`menu:{yemekhane_id}:{tarih}:{ogun_id}`):** Gün sonuna (`23:59:59`) kadar TTL ile saklanır. İlk istekte `CACHE MISS` sonrası DB'den okunup Redis'e yazılır; sonraki isteklerde `CACHE HIT` ile döner. Yönetici menü güncellediğinde veya değerlendirme eklendiğinde ilgili anahtar silinir (`DEL`).
-* **Oturum Deposu (`oturum:{token}`):** 30 dakika `Sliding Expiration` TTL ile saklanır. `docker restart yemekhane-uygulama` sonrasında dahi oturum kesintisiz devam eder; çıkış (`logout`) yapıldığında anahtar silinir.
-
----
-
-## 5. Aşama 4: Değişiklik Talebi (`04_degisiklik.sql`)
-
-* **Yarım Porsiyon (%60):** `rezervasyonlar` tablosuna `porsiyon ENUM('tam', 'yarim') DEFAULT 'tam'` sütunu eklenmiştir. Kahvaltıda yarım porsiyon talebi SP tarafından `SIGNAL SQLSTATE '45000'` (`Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.`) ile reddedilir. Öğle/akşam menülerinde ücret %60 olarak hesaplanır (`45.00 TL -> 27.00 TL`).
-* **Alerjen Uyarısı:** `kullanici_alerjenleri` tablosu ve `/api/auth/allergens` uç noktaları eklenmiştir. Kullanıcının seçtiği alerjenler menüdeki yemeklerle eşleştiğinde Günün Menüsü ekranında uyarı kutusu gösterilir.
-* **Eski Cache Temizliği:** Güncelleme sonrası `redis-cli flushdb` ile eski şemaya ait önbellek kayıtları temizlenmiştir.
-
----
-
-## 6. Ekran Görüntüleri
+## 5. Ekran Görüntüleri
 
 ![Giriş Ekranı](ekran_goruntuleri/01_giris.png)
 ![Günün Menüsü](ekran_goruntuleri/02_gunun_menusu.png)

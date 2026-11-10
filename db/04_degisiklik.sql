@@ -115,7 +115,7 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Rezervasyon süresi dolmuştur.';
     END IF;
 
-    -- Yarım porsiyon kuralı: Kahvaltıda yarım porsiyon YOKTUR!
+    -- Kahvaltıda yarım porsiyon geçerli değildir
     IF p_porsiyon = 'yarim' AND v_ogun_adi = 'Kahvaltı' THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.';

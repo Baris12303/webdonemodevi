@@ -63,7 +63,7 @@ def get_session(token: str) -> dict | None:
             logger.warning(f"Failed to delete invalid session key {key}: {del_err}")
         return None
 
-    # Sliding Expiration: Her başarılı istekte süreyi 30 dakika daha uzat
+    # Her istekte oturum süresini 30 dk yenile
     r.expire(key, settings.SESSION_EXPIRE_SECONDS)
     return parsed
 

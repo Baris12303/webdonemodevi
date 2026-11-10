@@ -33,7 +33,7 @@ class AdminService:
             )
             tarih_str = info["tarih"].isoformat() if hasattr(info["tarih"], "isoformat") else str(info["tarih"])
             invalidate_menu_cache(info["yemekhane_id"], tarih_str, info["ogun_id"])
-            return {"message": "Menü başarıyla güncellendi ve önbellek temizlendi."}
+            return {"message": "Menü güncellendi."}
         except ValueError as e:
             msg = str(e)
             code = status.HTTP_404_NOT_FOUND if msg == "Menü bulunamadı." else status.HTTP_400_BAD_REQUEST

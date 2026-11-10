@@ -246,11 +246,11 @@ async function loadDailyMenu() {
     if (matchingAllergens.length > 0) {
       allergenAlertHtml = `
         <div style="background: #fef2f2; border: 1.5px solid #ef4444; border-radius: 8px; padding: 12px 16px; margin-bottom: 15px; color: #991b1b;">
-          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; font-size: 0.95rem;">
-            <span>⚠️ DİKKAT: Alerjen Uyarısı!</span>
+          <div style="font-weight: 700; font-size: 0.95rem;">
+            Alerjen Uyarısı
           </div>
           <p style="font-size: 0.85rem; margin-top: 5px; line-height: 1.4;">
-            Bu menü profilinizde kayıtlı alerjenlerinizden <strong>${matchingAllergens.map(escapeHtml).join(', ')}</strong> içermektedir. Sağlığınız için tüketmeden önce lütfen dikkat ediniz!
+            Bu menüdeki bazı yemekler seçtiğiniz alerjenleri içeriyor: <strong>${matchingAllergens.map(escapeHtml).join(', ')}</strong>.
           </p>
         </div>
       `;
@@ -266,7 +266,7 @@ async function loadDailyMenu() {
       if (dishAllergens.length > 0) {
         const pills = dishAllergens.map(a => {
           const isMatch = userAllergenNames.includes(a);
-          return `<span class="badge ${isMatch ? 'badge-allergen-match' : 'badge-allergen'}">⚠️ ${escapeHtml(a)}</span>`;
+          return `<span class="badge ${isMatch ? 'badge-allergen-match' : 'badge-allergen'}">${escapeHtml(a)}</span>`;
         }).join("");
         dishAllergenHtml = `<div class="dish-allergens">${pills}</div>`;
       }
@@ -274,7 +274,7 @@ async function loadDailyMenu() {
       dishesHtml += `
         <li class="dish-item ${hasDishWarning ? 'dish-item-warning' : ''}">
           <div class="dish-info">
-            <span class="dish-name">${hasDishWarning ? '⚠️ ' : ''}${escapeHtml(y.ad)}</span>
+            <span class="dish-name">${escapeHtml(y.ad)}${hasDishWarning ? ' (Alerjen Uyarısı)' : ''}</span>
             <span class="dish-category">${escapeHtml(y.kategori_adi)}</span>
             ${dishAllergenHtml}
           </div>
@@ -286,14 +286,14 @@ async function loadDailyMenu() {
     let allergenBadges = "";
     (menu.tum_alerjenler || []).forEach(a => {
       const isUserAllergen = userAllergenNames.includes(a);
-      allergenBadges += `<span class="badge ${isUserAllergen ? 'badge-allergen-match' : 'badge-allergen'}">⚠️ ${escapeHtml(a)}</span>`;
+      allergenBadges += `<span class="badge ${isUserAllergen ? 'badge-allergen-match' : 'badge-allergen'}">${escapeHtml(a)}</span>`;
     });
 
     const cacheBadge = menu.kaynak === "cache"
-      ? '<span class="badge badge-info" title="Redis önbellekten yüklendi">⚡ Redis Önbellek</span>'
-      : '<span class="badge badge-veg" title="Veritabanından okundu">🗄️ MySQL Replica</span>';
+      ? '<span class="badge badge-info" title="Redis önbellekten yüklendi">Kaynak: Redis</span>'
+      : '<span class="badge badge-veg" title="Veritabanından okundu">Kaynak: Veritabanı</span>';
 
-    // Porsiyon seçimi (Kahvaltıda yarım porsiyon tamamen gizlenir)
+    // Porsiyon seçimi (kahvaltıda sadece tam porsiyon)
     let portionSelectorHtml = "";
     if (!allowHalf) {
       portionSelectorHtml = `
@@ -303,7 +303,7 @@ async function loadDailyMenu() {
             <input type="radio" name="daily-portion" value="tam" checked onchange="updateDailyPriceDisplay(${tamFiyat})">
             <span><strong>Tam Porsiyon</strong> - ${tamFiyat.toFixed(2)} TL</span>
           </label>
-          <p class="portion-note">ℹ️ Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.</p>
+          <p class="portion-note">Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.</p>
         </div>
       `;
     } else {
@@ -332,7 +332,7 @@ async function loadDailyMenu() {
           ${cacheBadge}
         </div>
         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">
-          📅 ${escapeHtml(menu.tarih)} &nbsp;|&nbsp; ⏰ Son Rezervasyon: ${escapeHtml(menu.ogun_son_saat)}
+          Tarih: ${escapeHtml(menu.tarih)} &nbsp;|&nbsp; Son Rezervasyon: ${escapeHtml(menu.ogun_son_saat)}
         </p>
 
         <ul class="dish-list">${dishesHtml}</ul>
@@ -342,7 +342,7 @@ async function loadDailyMenu() {
         </div>
 
         <div class="badge-group">
-          ${menu.vejetaryen_mi ? '<span class="badge badge-veg">🌱 Vejetaryen Menü</span>' : ''}
+          ${menu.vejetaryen_mi ? '<span class="badge badge-veg">Vejetaryen Menü</span>' : ''}
           ${allergenBadges}
         </div>
 
@@ -405,7 +405,7 @@ async function loadWeeklyMenus() {
       const isFull = Number(m.kalan_kapasite) <= 0;
       const allowHalf = isHalfPortionAllowed(m);
 
-      // Opsiyonel: Backend haftalık yanıtta alerjenler dönerse savunmacı olarak göster (N+1 istek atmadan)
+      // Haftalık yanıtta alerjen bilgisi varsa göster
       const weeklyAllergens = Array.isArray(m.tum_alerjenler)
         ? m.tum_alerjenler
         : (Array.isArray(m.alerjenler) ? m.alerjenler : []);
@@ -413,7 +413,7 @@ async function loadWeeklyMenus() {
       if (weeklyAllergens.length > 0) {
         const pills = weeklyAllergens.map(a => {
           const isMatch = userAllergenNames.includes(a);
-          return `<span class="badge ${isMatch ? 'badge-allergen-match' : 'badge-allergen'}">⚠️ ${escapeHtml(a)}</span>`;
+          return `<span class="badge ${isMatch ? 'badge-allergen-match' : 'badge-allergen'}">${escapeHtml(a)}</span>`;
         }).join("");
         weeklyAllergenHtml = `<div class="badge-group">${pills}</div>`;
       }
@@ -428,7 +428,7 @@ async function loadWeeklyMenus() {
               </span>
             </div>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 6px 0;">
-              ⏰ Son Saat: ${escapeHtml(m.ogun_son_saat)}
+              Son Saat: ${escapeHtml(m.ogun_son_saat)}
             </p>
             <p style="font-size: 0.9rem; margin: 10px 0;">${escapeHtml(m.yemek_listesi) || 'Yemek bilgisi yok'}</p>
             ${weeklyAllergenHtml}
@@ -474,12 +474,12 @@ async function handleBookReservationFromWeekly(menuId, allowHalf = true) {
   await handleBookReservation(menuId, portion, "weekly");
 }
 
-// Rezervasyon Yapma (Stored Procedure Çağrısı - porsiyon parametresi ile)
+// Rezervasyon oluşturma
 async function handleBookReservation(menuId, porsiyon = "tam", source = null) {
   try {
     const res = await apiRequest("/reservations", "POST", { menu_id: menuId, porsiyon: porsiyon });
     showToast(res.message, "success");
-    // Anlık güncel bakiyeyi header'a yansıt (Replication Lag yok!)
+    // Rezervasyon sonrası güncel bakiyeyi header'a yaz
     document.getElementById("user-balance").textContent = `${Number(res.guncel_bakiye).toFixed(2)} TL`;
     if (currentUser) currentUser.bakiye = res.guncel_bakiye;
 
@@ -491,7 +491,7 @@ async function handleBookReservation(menuId, porsiyon = "tam", source = null) {
       await loadDailyMenu();
     }
   } catch (err) {
-    // Hata mesajı (Örn: "Bakiye yetersiz." veya "Yemekhane kapasitesi dolmuştur.") apiRequest ile gösterildi
+    // Hata mesajı apiRequest içinde toast ile gösterildi
   }
 }
 
@@ -538,7 +538,7 @@ async function loadMyReservations() {
               ` : ''}
               ${(r.durum === 'kullanildi' && !r.degerlendirildi_mi) ? `
                 <button type="button" class="btn btn-primary btn-sm" onclick="openReviewModal(${Number(r.menu_id)})">
-                  ⭐ Değerlendir
+                  Değerlendir
                 </button>
               ` : ''}
             </div>
@@ -629,7 +629,7 @@ async function loadMenuReviews(menuId) {
         <div class="card" style="margin-bottom: 10px; padding: 12px;">
           <div class="row-between" style="gap: 6px;">
             <strong>${escapeHtml(r.kullanici_ad_soyad)}</strong>
-            <span style="color: #eab308; font-weight: 700; white-space: nowrap;">${'⭐'.repeat(puan)} (${puan}/5)</span>
+            <span style="color: #d97706; font-weight: 700; white-space: nowrap;">${puan} / 5</span>
           </div>
           <p style="margin-top: 6px; font-size: 0.9rem; word-break: break-word;">${escapeHtml(r.yorum) || ''}</p>
         </div>
@@ -694,7 +694,7 @@ async function loadAllergensScreen() {
       html += `
         <label style="display: flex; align-items: center; gap: 10px; padding: 12px 14px; margin-bottom: 0; background: #ffffff; border: 1.5px solid ${isChecked ? 'var(--primary)' : 'var(--border)'}; border-radius: 8px; cursor: pointer; transition: all 0.15s ease;">
           <input type="checkbox" value="${Number(a.id)}" ${isChecked ? 'checked' : ''} class="allergen-chk" onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : 'var(--border)'">
-          <span style="font-weight: 600; font-size: 0.9rem; color: var(--text);">⚠️ ${escapeHtml(a.ad)}</span>
+          <span style="font-weight: 600; font-size: 0.9rem; color: var(--text);">${escapeHtml(a.ad)}</span>
         </label>
       `;
     });
@@ -780,7 +780,7 @@ async function loadAdminStats() {
           <td>${escapeHtml(s.tarih)} (${escapeHtml(s.ogun_adi)})</td>
           <td>${escapeHtml(s.yemekhane_adi)}</td>
           <td>%${Number(s.doluluk_orani)} (${Number(s.aktif_rezervasyon_sayisi)}/${Number(s.toplam_kapasite)})</td>
-          <td style="font-weight: 700; color: #d97706;">⭐ ${Number(s.ortalama_puan)} (${Number(s.degerlendirme_sayisi)})</td>
+          <td style="font-weight: 700; color: #d97706;">${Number(s.ortalama_puan)} / 5 (${Number(s.degerlendirme_sayisi)})</td>
           <td>
             <button type="button" class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openEditMenu(${Number(s.menu_id)})">
               Düzenle
