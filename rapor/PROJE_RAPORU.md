@@ -2,6 +2,7 @@
 
 - **Ders:** Web Teknolojileri
 - **Öğretim Üyesi:** Burak Yılmaz
+- **GitHub Deposu:** https://github.com/Baris12303/webdonemodevi
 - **Mimari Seçimi:** Seçenek B - Web API + Arayüz (FastAPI + HTML5 / CSS3 / Vanilla JS)
 - **Altyapı:** Docker Compose (6 container: `mysql-primary`, `mysql-replica`, `replica-setup`, `redis`, `uygulama`, `frontend`)
 
