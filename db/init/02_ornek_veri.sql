@@ -1,5 +1,5 @@
 -- =====================================================
--- Yemekhane Otomasyonu - BaÅlangÄ±Ã§ Verileri
+-- Yemekhane Otomasyonu - Başlangıç Verileri
 -- 02_ornek_veri.sql
 -- =====================================================
 

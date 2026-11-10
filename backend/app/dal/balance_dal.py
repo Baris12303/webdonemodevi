@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 import pymysql
-from app.db import get_primary_connection, get_replica_connection
+from app.db import get_primary_connection, get_replica_connection, handle_mysql_error
+
 
 class BalanceDAL:
     @staticmethod
@@ -17,8 +18,10 @@ class BalanceDAL:
                 return guncel_bakiye
             except pymysql.MySQLError as e:
                 conn.rollback()
-                error_msg = str(e.args[1]) if len(e.args) > 1 else str(e)
-                raise ValueError(error_msg)
+                handle_mysql_error(e, "BalanceDAL.top_up_balance")
+            except Exception:
+                conn.rollback()
+                raise
 
     @staticmethod
     def get_balance_movements(kullanici_id: int) -> List[Dict[str, Any]]:
@@ -32,7 +35,9 @@ class BalanceDAL:
                     WHERE kullanici_id = %s
                     ORDER BY tarih DESC;
                     """,
-                    (kullanici_id,)
+                    (kullanici_id,),
                 )
-                return cursor.fetchall()
-
+                rows = cursor.fetchall()
+                for r in rows:
+                    r["miktar"] = float(r["miktar"])
+                return rows

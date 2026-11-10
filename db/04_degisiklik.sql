@@ -72,22 +72,37 @@ proc_label: BEGIN
     DECLARE v_var_olan_durum ENUM('aktif', 'kullanildi', 'iptal');
     DECLARE v_rezervasyon_id INT;
 
-    -- Kullanıcı kontrolü
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    IF p_porsiyon IS NULL THEN
+        SET p_porsiyon = 'tam';
+    END IF;
+
+    -- Transaction Başlat (Satır kilitlemeden önce)
+    START TRANSACTION;
+
+    -- Kullanıcı kontrolü ve kilitleme
     SELECT rol, bakiye INTO v_rol, v_bakiye
-    FROM kullanicilar WHERE id = p_kullanici_id;
+    FROM kullanicilar WHERE id = p_kullanici_id
+    FOR UPDATE;
 
     IF v_rol IS NULL THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Kullanıcı bulunamadı.';
     END IF;
 
-    -- Menü ve öğün kontrolü
+    -- Menü ve öğün kontrolü (menü satırını kilitle)
     SELECT m.tarih, og.son_saat, og.ad, m.ogrenci_fiyati, m.personel_fiyati, yh.kapasite
     INTO v_tarih, v_son_saat, v_ogun_adi, v_ogrenci_fiyati, v_personel_fiyati, v_kapasite
     FROM menuler m
     JOIN ogunler og ON m.ogun_id = og.id
     JOIN yemekhaneler yh ON m.yemekhane_id = yh.id
-    WHERE m.id = p_menu_id;
+    WHERE m.id = p_menu_id
+    FOR UPDATE OF m;
 
     IF v_tarih IS NULL THEN
         SIGNAL SQLSTATE '45000'
@@ -106,12 +121,13 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Kahvaltıda yarım porsiyon seçeneği bulunmamaktadır.';
     END IF;
 
-    -- Kullanıcının zaten aktif rezervasyonu var mı?
+    -- Kullanıcının bu menüde aktif veya kullanılmış rezervasyonu var mı?
     SELECT durum, id INTO v_var_olan_durum, v_rezervasyon_id
     FROM rezervasyonlar
-    WHERE kullanici_id = p_kullanici_id AND menu_id = p_menu_id;
+    WHERE kullanici_id = p_kullanici_id AND menu_id = p_menu_id
+    FOR UPDATE;
 
-    IF v_var_olan_durum = 'aktif' THEN
+    IF v_var_olan_durum IN ('aktif', 'kullanildi') THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Bu menüye zaten rezervasyonunuz bulunmaktadır.';
     END IF;
@@ -119,7 +135,8 @@ proc_label: BEGIN
     -- Kapasite kontrolü
     SELECT COUNT(*) INTO v_aktif_rezervasyon
     FROM rezervasyonlar
-    WHERE menu_id = p_menu_id AND durum = 'aktif';
+    WHERE menu_id = p_menu_id AND durum = 'aktif'
+    FOR UPDATE;
 
     IF v_aktif_rezervasyon >= v_kapasite THEN
         SIGNAL SQLSTATE '45000'
@@ -146,21 +163,19 @@ proc_label: BEGIN
         SET MESSAGE_TEXT = 'Bakiye yetersiz.';
     END IF;
 
-    -- Transaction Başlat
-    START TRANSACTION;
-
     -- Bakiyeden düş
     UPDATE kullanicilar
     SET bakiye = bakiye - v_ucret
     WHERE id = p_kullanici_id;
 
-    -- Rezervasyonu kaydet / güncelle
+    -- Rezervasyonu kaydet / güncelle (iptal edilmiş kayıt varsa yeniden aktifleştir)
     IF v_rezervasyon_id IS NOT NULL THEN
         UPDATE rezervasyonlar
         SET durum = 'aktif',
             ucret = v_ucret,
             porsiyon = p_porsiyon,
             iptal_tarihi = NULL,
+            kullanilma_tarihi = NULL,
             olusturulma_tarihi = NOW()
         WHERE id = v_rezervasyon_id;
     ELSE

@@ -69,7 +69,8 @@ header {
 .user-badge {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .balance-pill {
@@ -162,6 +163,8 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .form-group {
@@ -187,10 +190,33 @@ input, select, textarea {
   transition: border-color 0.15s ease;
 }
 
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+input[type="radio"]:focus,
+input[type="checkbox"]:focus {
+  box-shadow: none;
+}
+
+input[type="radio"]:focus-visible,
+input[type="checkbox"]:focus-visible,
+.btn:focus-visible,
+.nav-tab:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .btn {
@@ -214,6 +240,15 @@ input:focus, select:focus, textarea:focus {
 
 .btn-primary:hover:not(:disabled) {
   background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: #e2e8f0;
+  color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #cbd5e1;
 }
 
 .btn-danger {
@@ -241,6 +276,43 @@ input:focus, select:focus, textarea:focus {
   width: auto;
 }
 
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.portion-box {
+  margin: 15px 0;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.portion-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.portion-note {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
 /* Menü Öğeleri Listesi */
 .dish-list {
   list-style: none;
@@ -250,7 +322,8 @@ input:focus, select:focus, textarea:focus {
 .dish-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--border);
 }
@@ -259,8 +332,22 @@ input:focus, select:focus, textarea:focus {
   border-bottom: none;
 }
 
+.dish-item-warning {
+  background: #fef2f2;
+  border-left: 3px solid var(--danger);
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 4px 0;
+}
+
+.dish-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .dish-name {
   font-weight: 600;
+  word-break: break-word;
 }
 
 .dish-category {
@@ -269,9 +356,19 @@ input:focus, select:focus, textarea:focus {
   display: block;
 }
 
-.dish-cal {
+.dish-allergens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.dish-cal,
+.balance-amount {
   font-size: 0.85rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Badges */
@@ -299,15 +396,77 @@ input:focus, select:focus, textarea:focus {
   color: #b91c1c;
 }
 
+.badge-allergen-match {
+  background: var(--danger);
+  color: #ffffff;
+  font-weight: 700;
+}
+
 .badge-info {
   background: var(--primary-light);
   color: var(--primary);
 }
 
+/* Admin Edit & Table */
+.admin-edit-meta {
+  background: var(--primary-light);
+  color: #075985;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 15px;
+  word-break: break-word;
+}
+
+.dish-checkbox-list {
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  background: #f8fafc;
+}
+
+.dish-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.admin-table th,
+.admin-table td {
+  padding: 8px;
+  white-space: nowrap;
+}
+
 /* Grid & Responsive */
 .grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 15px;
 }
 
@@ -319,6 +478,20 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-width: 0;
+}
+
+#allergens-checkbox-list > label {
+  min-width: 0;
+}
+
+.schedule-card p,
+#reservations-list p,
+#balance-history-list strong,
+#allergens-checkbox-list span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Toast Notifications */
@@ -341,6 +514,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideIn 0.25s ease-out;
   max-width: 320px;
+  word-break: break-word;
 }
 
 .toast-success { background: var(--success); }
@@ -348,8 +522,8 @@ input:focus, select:focus, textarea:focus {
 .toast-info { background: var(--primary); }
 
 @keyframes slideIn {
-  from { transform: translateX(100%); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* Mobile Optimizations (approx 400px) */
@@ -357,6 +531,10 @@ input:focus, select:focus, textarea:focus {
   .header-container {
     flex-direction: column;
     align-items: flex-start;
+  }
+  .user-badge {
+    width: 100%;
+    justify-content: flex-start;
   }
   .nav-container {
     padding: 0 8px;
@@ -367,6 +545,14 @@ input:focus, select:focus, textarea:focus {
   }
   .card {
     padding: 16px;
+  }
+  #toast-container {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+  .toast {
+    max-width: 100%;
   }
 }
 

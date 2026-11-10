@@ -23,7 +23,9 @@ services:
       MYSQL_PASSWORD: yemekhane_pass
     volumes:
       - ./db/conf/primary.cnf:/etc/mysql/conf.d/primary.cnf:ro
-      - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./db/init/01_sema.sql:/docker-entrypoint-initdb.d/01_sema.sql:ro
+      - ./db/init/02_ornek_veri.sql:/docker-entrypoint-initdb.d/02_ornek_veri.sql:ro
+      - ./db/04_degisiklik.sql:/docker-entrypoint-initdb.d/04_degisiklik.sql:ro
       - mysql_primary_data:/var/lib/mysql
     ports:
       - "3307:3306"
@@ -142,8 +144,16 @@ services:
         condition: service_healthy
       mysql-replica:
         condition: service_healthy
+      replica-setup:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
     environment:
       - DB_PRIMARY_HOST=mysql-primary
       - DB_PRIMARY_PORT=3306

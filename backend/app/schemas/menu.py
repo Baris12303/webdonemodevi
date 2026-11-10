@@ -1,6 +1,7 @@
 from typing import List, Optional
-from datetime import date, time
-from pydantic import BaseModel
+from datetime import date
+from pydantic import BaseModel, Field
+
 
 class YemekItem(BaseModel):
     id: int
@@ -10,6 +11,7 @@ class YemekItem(BaseModel):
     kategori_adi: str
     kategori_sira: int
     alerjenler: List[str] = []
+
 
 class MenuDetailOut(BaseModel):
     menu_id: int
@@ -30,18 +32,19 @@ class MenuDetailOut(BaseModel):
     doluluk_orani: float = 0.0
     ortalama_puan: float = 0.0
     degerlendirme_sayisi: int = 0
-    kaynak: str = "database" # "cache" veya "database"
+    kaynak: str = "database"  # "cache" veya "database"
+
 
 class MenuCreateRequest(BaseModel):
-    yemekhane_id: int
+    yemekhane_id: int = Field(..., ge=1)
     tarih: date
-    ogun_id: int
-    ogrenci_fiyati: float
-    personel_fiyati: float
-    yemek_ids: List[int]
+    ogun_id: int = Field(..., ge=1)
+    ogrenci_fiyati: float = Field(..., gt=0, le=99999999.99)
+    personel_fiyati: float = Field(..., gt=0, le=99999999.99)
+    yemek_ids: List[int] = Field(..., min_length=1)
+
 
 class MenuUpdateRequest(BaseModel):
-    ogrenci_fiyati: Optional[float] = None
-    personel_fiyati: Optional[float] = None
-    yemek_ids: Optional[List[int]] = None
-
+    ogrenci_fiyati: Optional[float] = Field(None, gt=0, le=99999999.99)
+    personel_fiyati: Optional[float] = Field(None, gt=0, le=99999999.99)
+    yemek_ids: Optional[List[int]] = Field(None, min_length=1)

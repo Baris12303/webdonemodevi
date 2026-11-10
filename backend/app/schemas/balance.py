@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 class BalanceTopUpRequest(BaseModel):
-    miktar: float = Field(..., gt=0, description="Yüklenecek miktar pozitif olmalıdır")
+    miktar: float = Field(..., gt=0, le=99999999.99, description="Yüklenecek miktar pozitif olmalıdır")
 
 class BalanceMovementOut(BaseModel):
     id: int

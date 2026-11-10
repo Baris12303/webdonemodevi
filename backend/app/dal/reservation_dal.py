@@ -1,6 +1,7 @@
 from typing import List, Dict, Any, Optional
 import pymysql
-from app.db import get_primary_connection, get_replica_connection
+from app.db import get_primary_connection, get_replica_connection, handle_mysql_error
+
 
 class ReservationDAL:
     @staticmethod
@@ -10,11 +11,10 @@ class ReservationDAL:
             try:
                 with conn.cursor() as cursor:
                     cursor.execute("CALL sp_rezervasyon_yap(%s, %s, %s);", (kullanici_id, menu_id, porsiyon))
-                    
-                    # Oluşturulan rezervasyon id ve güncel bakiye
+
                     cursor.execute(
                         "SELECT id FROM rezervasyonlar WHERE kullanici_id = %s AND menu_id = %s AND durum = 'aktif';",
-                        (kullanici_id, menu_id)
+                        (kullanici_id, menu_id),
                     )
                     rez_row = cursor.fetchone()
                     rez_id = rez_row["id"] if rez_row else 0
@@ -26,12 +26,30 @@ class ReservationDAL:
                 conn.commit()
                 return {
                     "rezervasyon_id": rez_id,
-                    "guncel_bakiye": guncel_bakiye
+                    "guncel_bakiye": guncel_bakiye,
                 }
             except pymysql.MySQLError as e:
                 conn.rollback()
-                error_msg = str(e.args[1]) if len(e.args) > 1 else str(e)
-                raise ValueError(error_msg)
+                handle_mysql_error(e, "ReservationDAL.make_reservation")
+            except Exception:
+                conn.rollback()
+                raise
+
+    @staticmethod
+    def get_reservation_menu_coords(rezervasyon_id: int) -> Optional[Dict[str, Any]]:
+        """Önbellek geçersizleştirme için rezervasyonun menü koordinatlarını döndürür"""
+        with get_primary_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    SELECT m.yemekhane_id, m.tarih, m.ogun_id
+                    FROM rezervasyonlar r
+                    JOIN menuler m ON r.menu_id = m.id
+                    WHERE r.id = %s;
+                    """,
+                    (rezervasyon_id,),
+                )
+                return cursor.fetchone()
 
     @staticmethod
     def cancel_reservation(kullanici_id: int, rezervasyon_id: int) -> float:
@@ -47,8 +65,10 @@ class ReservationDAL:
                 return guncel_bakiye
             except pymysql.MySQLError as e:
                 conn.rollback()
-                error_msg = str(e.args[1]) if len(e.args) > 1 else str(e)
-                raise ValueError(error_msg)
+                handle_mysql_error(e, "ReservationDAL.cancel_reservation")
+            except Exception:
+                conn.rollback()
+                raise
 
     @staticmethod
     def get_user_reservations(kullanici_id: int) -> List[Dict[str, Any]]:
@@ -83,7 +103,7 @@ class ReservationDAL:
                 cursor.execute(query, (kullanici_id,))
                 rows = cursor.fetchall()
                 for r in rows:
+                    r["ucret"] = float(r["ucret"])
                     r["iptal_edilebilir_mi"] = bool(r["iptal_edilebilir_mi"])
                     r["degerlendirildi_mi"] = bool(r["degerlendirildi_mi"])
                 return rows
-

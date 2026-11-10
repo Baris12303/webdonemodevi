@@ -9,7 +9,7 @@
 <body>
 
   <!-- Toast Bildirim Alanı -->
-  <div id="toast-container"></div>
+  <div id="toast-container" aria-live="polite"></div>
 
   <!-- Üst Başlık (Header) -->
   <header>
@@ -27,7 +27,7 @@
         <span id="user-balance" class="balance-pill">0.00 TL</span>
         <span id="user-name" style="font-weight: 600; font-size: 0.9rem;"></span>
         <span id="user-role" class="role-badge"></span>
-        <button class="btn btn-danger btn-sm" onclick="logout()">Çıkış</button>
+        <button type="button" class="btn btn-danger btn-sm" onclick="logout()">Çıkış</button>
       </div>
     </div>
   </header>
@@ -35,12 +35,12 @@
   <!-- Navigasyon Sekmeleri -->
   <nav id="main-nav" style="display: none;">
     <div class="nav-container">
-      <button class="nav-tab active" data-screen="screen-today" onclick="showScreen('screen-today')">Günün Menüsü</button>
-      <button class="nav-tab" data-screen="screen-weekly" onclick="showScreen('screen-weekly')">Haftalık Menü</button>
-      <button class="nav-tab" data-screen="screen-reservations" onclick="showScreen('screen-reservations')">Rezervasyonlarım</button>
-      <button class="nav-tab" data-screen="screen-balance" onclick="showScreen('screen-balance')">Bakiye</button>
-      <button class="nav-tab" data-screen="screen-allergens" onclick="showScreen('screen-allergens')">⚠️ Alerjenlerim</button>
-      <button class="nav-tab" id="tab-admin" data-screen="screen-admin" style="display: none;" onclick="showScreen('screen-admin')">⚙️ Yönetici Paneli</button>
+      <button type="button" class="nav-tab active" data-screen="screen-today" onclick="showScreen('screen-today')">Günün Menüsü</button>
+      <button type="button" class="nav-tab" data-screen="screen-weekly" onclick="showScreen('screen-weekly')">Haftalık Menü</button>
+      <button type="button" class="nav-tab" data-screen="screen-reservations" onclick="showScreen('screen-reservations')">Rezervasyonlarım</button>
+      <button type="button" class="nav-tab" data-screen="screen-balance" onclick="showScreen('screen-balance')">Bakiye</button>
+      <button type="button" class="nav-tab" data-screen="screen-allergens" onclick="showScreen('screen-allergens')">⚠️ Alerjenlerim</button>
+      <button type="button" class="nav-tab" id="tab-admin" data-screen="screen-admin" style="display: none;" onclick="showScreen('screen-admin')">⚙️ Yönetici Paneli</button>
     </div>
   </nav>
 
@@ -66,18 +66,6 @@
           </div>
           <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Giriş Yap</button>
         </form>
-
-        <div style="margin-top: 25px; padding-top: 15px; border-top: 1px dashed var(--border);">
-          <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 8px;">
-            Hızlı Test Girişi (Şifre: password123):
-          </span>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('admin@kampus.edu.tr')">Yönetici</button>
-            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('personel1@kampus.edu.tr')">Personel</button>
-            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('ogrenci1@kampus.edu.tr')">Öğrenci 1</button>
-            <button class="btn btn-sm" style="background: #e2e8f0;" onclick="handleQuickFill('ogrenci6@kampus.edu.tr')">Öğrenci 6</button>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -86,14 +74,14 @@
       <div class="card" style="margin-bottom: 15px; padding: 15px;">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
           <div>
-            <label>Yemekhane</label>
+            <label for="today-yh-select">Yemekhane</label>
             <select id="today-yh-select" onchange="loadDailyMenu()">
               <option value="1">Merkez Yemekhanesi (400 Kişi)</option>
               <option value="2">Mühendislik Yemekhanesi (60 Kişi)</option>
             </select>
           </div>
           <div>
-            <label>Öğün</label>
+            <label for="today-ogun-select">Öğün</label>
             <select id="today-ogun-select" onchange="loadDailyMenu()">
               <option value="1">Kahvaltı (Son: 07:00)</option>
               <option value="2" selected>Öğle (Son: 10:00)</option>
@@ -101,7 +89,7 @@
             </select>
           </div>
           <div>
-            <label>Tarih</label>
+            <label for="today-date-picker">Tarih</label>
             <input type="date" id="today-date-picker" onchange="loadDailyMenu()">
           </div>
         </div>
@@ -115,15 +103,15 @@
     <!-- Haftalık Menü -->
     <section id="screen-weekly" class="screen">
       <div class="card" style="margin-bottom: 15px; padding: 15px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-          <div>
-            <label>Yemekhane Seçimi</label>
-            <select id="weekly-yh-select" onchange="loadWeeklyMenus()" style="min-width: 220px;">
+        <div class="row-between" style="gap: 10px;">
+          <div style="flex: 1; min-width: 180px;">
+            <label for="weekly-yh-select">Yemekhane Seçimi</label>
+            <select id="weekly-yh-select" onchange="loadWeeklyMenus()">
               <option value="1">Merkez Yemekhanesi</option>
               <option value="2">Mühendislik Yemekhanesi</option>
             </select>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="loadWeeklyMenus()">Yenile</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="loadWeeklyMenus()">Yenile</button>
         </div>
       </div>
 
@@ -149,12 +137,12 @@
         </div>
 
         <div style="margin-top: 20px;">
-          <label style="margin-bottom: 10px;">Hızlı Bakiye Yükle:</label>
+          <span style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;">Hızlı Bakiye Yükle:</span>
           <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <button class="btn btn-primary btn-sm" onclick="handleTopUp(50)">+50 TL</button>
-            <button class="btn btn-primary btn-sm" onclick="handleTopUp(100)">+100 TL</button>
-            <button class="btn btn-primary btn-sm" onclick="handleTopUp(200)">+200 TL</button>
-            <button class="btn btn-primary btn-sm" onclick="handleTopUp(500)">+500 TL</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="handleTopUp(50)">+50 TL</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="handleTopUp(100)">+100 TL</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="handleTopUp(200)">+200 TL</button>
+            <button type="button" class="btn btn-primary btn-sm" onclick="handleTopUp(500)">+500 TL</button>
           </div>
         </div>
       </div>
@@ -174,7 +162,7 @@
         <form onsubmit="handleSendReview(event)">
           <input type="hidden" id="review-menu-id">
           <div class="form-group">
-            <label>Puanınız (1 - 5 Yıldız)</label>
+            <label for="review-rating">Puanınız (1 - 5 Yıldız)</label>
             <select id="review-rating">
               <option value="5">⭐⭐⭐⭐⭐ 5 - Mükemmel</option>
               <option value="4">⭐⭐⭐⭐ 4 - Çok İyi</option>
@@ -184,7 +172,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label>Yorumunuz (İsteğe bağlı)</label>
+            <label for="review-comment">Yorumunuz (İsteğe bağlı)</label>
             <textarea id="review-comment" rows="3" placeholder="Yemekler nasıldı, lezzet ve porsiyon nasıldı?"></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Değerlendirmeyi Gönder</button>
@@ -208,29 +196,58 @@
         <div id="allergens-checkbox-list" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 20px;">
           <!-- Dinamik Checkbox Listesi -->
         </div>
-        <button class="btn btn-primary" onclick="saveUserAllergens()">Alerjen Tercihlerimi Kaydet</button>
+        <button type="button" class="btn btn-primary" onclick="saveUserAllergens()">Alerjen Tercihlerimi Kaydet</button>
       </div>
     </section>
 
     <!-- Yönetici Paneli -->
     <section id="screen-admin" class="screen">
-      <div class="card">
-        <div class="card-title">Yeni Menü Oluştur</div>
-        <form onsubmit="handleCreateMenu(event)">
+      <div id="admin-edit-card" class="card" style="display: none; border-color: var(--primary);">
+        <div class="card-title">
+          <span id="admin-edit-title">Menü Düzenle</span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEditMenu()">İptal</button>
+        </div>
+        <div id="admin-edit-meta" class="admin-edit-meta"></div>
+        <form onsubmit="handleUpdateMenu(event)" novalidate>
+          <input type="hidden" id="admin-edit-menu-id">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
             <div class="form-group">
-              <label>Yemekhane</label>
+              <label for="admin-edit-price-student">Öğrenci Fiyatı (TL)</label>
+              <input type="number" id="admin-edit-price-student" step="0.01" min="0.01" required>
+            </div>
+            <div class="form-group">
+              <label for="admin-edit-price-staff">Personel Fiyatı (TL)</label>
+              <input type="number" id="admin-edit-price-staff" step="0.01" min="0.01" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <span style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted);">Menü Yemekleri (Birden fazla seçebilirsiniz)</span>
+            <div id="admin-edit-dishes" class="dish-checkbox-list"></div>
+          </div>
+          <div class="action-row">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Değişiklikleri Kaydet</button>
+            <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="cancelEditMenu()">İptal</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Yeni Menü Oluştur</div>
+        <form onsubmit="handleCreateMenu(event)" novalidate>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+            <div class="form-group">
+              <label for="admin-yh-select">Yemekhane</label>
               <select id="admin-yh-select">
                 <option value="1">Merkez Yemekhanesi</option>
                 <option value="2">Mühendislik Yemekhanesi</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Tarih</label>
+              <label for="admin-menu-date">Tarih</label>
               <input type="date" id="admin-menu-date" required>
             </div>
             <div class="form-group">
-              <label>Öğün</label>
+              <label for="admin-ogun-select">Öğün</label>
               <select id="admin-ogun-select">
                 <option value="1">Kahvaltı</option>
                 <option value="2">Öğle</option>
@@ -238,17 +255,17 @@
               </select>
             </div>
             <div class="form-group">
-              <label>Öğrenci Fiyatı (TL)</label>
-              <input type="number" id="admin-price-student" step="0.5" value="45.0" required>
+              <label for="admin-price-student">Öğrenci Fiyatı (TL)</label>
+              <input type="number" id="admin-price-student" step="0.01" min="0.01" value="45.0" required>
             </div>
             <div class="form-group">
-              <label>Personel Fiyatı (TL)</label>
-              <input type="number" id="admin-price-staff" step="0.5" value="90.0" required>
+              <label for="admin-price-staff">Personel Fiyatı (TL)</label>
+              <input type="number" id="admin-price-staff" step="0.01" min="0.01" value="90.0" required>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Menü Yemekleri (Ctrl veya Shift ile çoklu seçin)</label>
+            <label for="admin-dishes-select">Menü Yemekleri (Ctrl veya Shift ile çoklu seçin)</label>
             <select id="admin-dishes-select" multiple size="7" style="height: 160px;"></select>
           </div>
 

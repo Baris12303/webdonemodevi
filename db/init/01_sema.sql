@@ -1,5 +1,5 @@
 -- =====================================================
--- Yemekhane Otomasyonu - VeritabanÄ± ÅemasÄ±
+-- Yemekhane Otomasyonu - Veritabanı Şeması
 -- 01_sema.sql
 -- 12 Tablo, 3 View, 4 Stored Procedure
 -- =====================================================
@@ -338,29 +338,47 @@ CREATE PROCEDURE sp_rezervasyon_iptal(
     IN p_rezervasyon_id INT
 )
 proc_label: BEGIN
+    DECLARE v_kullanici_lock INT;
     DECLARE v_ucret DECIMAL(10,2);
     DECLARE v_durum ENUM('aktif', 'kullanildi', 'iptal');
+    DECLARE v_menu_id INT;
     DECLARE v_tarih DATE;
     DECLARE v_son_saat TIME;
 
-    SELECT r.ucret, r.durum, m.tarih, og.son_saat
-    INTO v_ucret, v_durum, v_tarih, v_son_saat
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT id INTO v_kullanici_lock
+    FROM kullanicilar
+    WHERE id = p_kullanici_id
+    FOR UPDATE;
+
+    SELECT r.ucret, r.durum, r.menu_id
+    INTO v_ucret, v_durum, v_menu_id
     FROM rezervasyonlar r
-    JOIN menuler m ON r.menu_id = m.id
-    JOIN ogunler og ON m.ogun_id = og.id
-    WHERE r.id = p_rezervasyon_id AND r.kullanici_id = p_kullanici_id;
+    WHERE r.id = p_rezervasyon_id AND r.kullanici_id = p_kullanici_id
+    FOR UPDATE;
 
     IF v_durum IS NULL OR v_durum != 'aktif' THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'İptal edilebilir aktif rezervasyon bulunamadı.';
     END IF;
 
+    SELECT m.tarih, og.son_saat
+    INTO v_tarih, v_son_saat
+    FROM menuler m
+    JOIN ogunler og ON m.ogun_id = og.id
+    WHERE m.id = v_menu_id;
+
     IF NOW() > TIMESTAMP(v_tarih, v_son_saat) THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Rezervasyon iptal süresi geçmiştir.';
     END IF;
-
-    START TRANSACTION;
 
     UPDATE rezervasyonlar
     SET durum = 'iptal',
@@ -383,20 +401,30 @@ CREATE PROCEDURE sp_bakiye_yukle(
     IN p_miktar DECIMAL(10,2)
 )
 proc_label: BEGIN
-    DECLARE v_exists INT;
+    DECLARE v_kullanici_lock INT;
 
-    IF p_miktar <= 0 THEN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    IF p_miktar IS NULL OR p_miktar <= 0 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Yüklenecek miktar sıfırdan büyük olmalıdır.';
     END IF;
 
-    SELECT COUNT(*) INTO v_exists FROM kullanicilar WHERE id = p_kullanici_id;
-    IF v_exists = 0 THEN
+    START TRANSACTION;
+
+    SELECT id INTO v_kullanici_lock
+    FROM kullanicilar
+    WHERE id = p_kullanici_id
+    FOR UPDATE;
+
+    IF v_kullanici_lock IS NULL THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Kullanıcı bulunamadı.';
     END IF;
-
-    START TRANSACTION;
 
     UPDATE kullanicilar
     SET bakiye = bakiye + p_miktar
@@ -414,7 +442,21 @@ CREATE PROCEDURE sp_turnike_gecis(
     IN p_yemekhane_id INT
 )
 proc_label: BEGIN
+    DECLARE v_kullanici_lock INT;
     DECLARE v_rezervasyon_id INT;
+
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+
+    START TRANSACTION;
+
+    SELECT id INTO v_kullanici_lock
+    FROM kullanicilar
+    WHERE id = p_kullanici_id
+    FOR UPDATE;
 
     SELECT r.id INTO v_rezervasyon_id
     FROM rezervasyonlar r
@@ -424,14 +466,13 @@ proc_label: BEGIN
       AND m.tarih = CURDATE()
       AND r.durum = 'aktif'
     ORDER BY m.ogun_id ASC
-    LIMIT 1;
+    LIMIT 1
+    FOR UPDATE OF r;
 
     IF v_rezervasyon_id IS NULL THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Geçerli bir aktif rezervasyon bulunamadı.';
     END IF;
-
-    START TRANSACTION;
 
     UPDATE rezervasyonlar
     SET durum = 'kullanildi',

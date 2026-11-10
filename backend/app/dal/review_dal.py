@@ -1,6 +1,7 @@
 from typing import List, Dict, Any
 import pymysql
-from app.db import get_primary_connection, get_replica_connection
+from app.db import get_primary_connection, get_replica_connection, handle_mysql_error
+
 
 class ReviewDAL:
     @staticmethod
@@ -9,19 +10,17 @@ class ReviewDAL:
         with get_primary_connection() as conn:
             try:
                 with conn.cursor() as cursor:
-                    # Kullanıcının bu menüyü gerçekten kullanıp kullanmadığını denetle
                     cursor.execute(
                         "SELECT id FROM rezervasyonlar WHERE kullanici_id = %s AND menu_id = %s AND durum = 'kullanildi';",
-                        (kullanici_id, menu_id)
+                        (kullanici_id, menu_id),
                     )
                     used = cursor.fetchone()
                     if not used:
                         raise ValueError("Yalnızca kullanılmış (turnikeden geçilmiş) menülere değerlendirme yapabilirsiniz.")
 
-                    # Menüye tek oy kontrolü
                     cursor.execute(
                         "SELECT id FROM degerlendirmeler WHERE kullanici_id = %s AND menu_id = %s;",
-                        (kullanici_id, menu_id)
+                        (kullanici_id, menu_id),
                     )
                     if cursor.fetchone():
                         raise ValueError("Bu menüye zaten değerlendirme yaptınız.")
@@ -31,15 +30,17 @@ class ReviewDAL:
                         INSERT INTO degerlendirmeler (kullanici_id, menu_id, puan, yorum, tarih)
                         VALUES (%s, %s, %s, %s, NOW());
                         """,
-                        (kullanici_id, menu_id, puan, yorum)
+                        (kullanici_id, menu_id, puan, yorum),
                     )
                     review_id = cursor.lastrowid
                 conn.commit()
                 return review_id
             except pymysql.MySQLError as e:
                 conn.rollback()
-                error_msg = str(e.args[1]) if len(e.args) > 1 else str(e)
-                raise ValueError(error_msg)
+                handle_mysql_error(e, "ReviewDAL.add_review")
+            except Exception:
+                conn.rollback()
+                raise
 
     @staticmethod
     def get_menu_reviews(menu_id: int) -> List[Dict[str, Any]]:
@@ -55,7 +56,6 @@ class ReviewDAL:
                     WHERE d.menu_id = %s
                     ORDER BY d.tarih DESC;
                     """,
-                    (menu_id,)
+                    (menu_id,),
                 )
                 return cursor.fetchall()
-

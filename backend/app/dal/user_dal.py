@@ -1,5 +1,7 @@
 from typing import Optional, Dict, Any
-from app.db import get_replica_connection, get_primary_connection
+import pymysql
+from app.db import get_replica_connection, get_primary_connection, handle_mysql_error
+
 
 class UserDAL:
     @staticmethod
@@ -9,7 +11,7 @@ class UserDAL:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT id, ogrenci_no, ad, soyad, eposta, sifre_hash, rol, bakiye FROM kullanicilar WHERE eposta = %s",
-                    (email,)
+                    (email,),
                 )
                 return cursor.fetchone()
 
@@ -21,9 +23,12 @@ class UserDAL:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT id, ogrenci_no, ad, soyad, eposta, rol, bakiye FROM kullanicilar WHERE id = %s",
-                    (user_id,)
+                    (user_id,),
                 )
-                return cursor.fetchone()
+                user = cursor.fetchone()
+                if user:
+                    user["bakiye"] = float(user["bakiye"])
+                return user
 
     @staticmethod
     def get_all_allergens():
@@ -40,7 +45,7 @@ class UserDAL:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "SELECT alerjen_id FROM kullanici_alerjenleri WHERE kullanici_id = %s;",
-                    (user_id,)
+                    (user_id,),
                 )
                 return [row["alerjen_id"] for row in cursor.fetchall()]
 
@@ -54,11 +59,13 @@ class UserDAL:
                     for a_id in allergen_ids:
                         cursor.execute(
                             "INSERT INTO kullanici_alerjenleri (kullanici_id, alerjen_id) VALUES (%s, %s);",
-                            (user_id, a_id)
+                            (user_id, a_id),
                         )
                 conn.commit()
                 return True
+            except pymysql.MySQLError as e:
+                conn.rollback()
+                handle_mysql_error(e, "UserDAL.update_user_allergens")
             except Exception:
                 conn.rollback()
                 raise
-
